@@ -1,0 +1,392 @@
+PDP Test Report for SET02
+
+
+Test Name: robot-tests
+Definitions:
+	(define ROBOT-POINT-N-BELOW-S-WALL (initial-robot 100 500))
+	(define ROBOT-POINT-N-INSIDE-CANVAS (initial-robot 100 200))
+	(define ROBOT-POINT-N-AT-N-WALL (initial-robot 100 15))
+	(define ROBOT-POINT-S-LEFT-W-WALL
+	  (robot-right (robot-right (initial-robot -100 -100))))
+	(define ROBOT-POINT-N-LEFT-W-WALL (initial-robot -100 700))
+	(define ROBOT-POINT-E-AT-N-WALL (robot-right (initial-robot 180 15)))
+	(define ROBOT-POINT-W-AT-N-WALL (robot-left (initial-robot 15 15)))
+
+Test Case: 
+  (test-equal?
+   "robot.rkt: Testing robot-x."
+   (robot-x ROBOT-POINT-N-BELOW-S-WALL)
+   100)
+Test Result: Success
+
+Test Case: 
+  (test-equal?
+   "robot.rkt: Testing robot-y."
+   (robot-y ROBOT-POINT-N-BELOW-S-WALL)
+   500)
+Test Result: Success
+
+Test Case: 
+  (test-equal?
+   "robot.rkt: Testing robot-left and robot-right."
+   (robot-left (robot-left (robot-left ROBOT-POINT-N-BELOW-S-WALL)))
+   (robot-right ROBOT-POINT-N-BELOW-S-WALL))
+Test Result: Success
+
+Test Case: 
+  (test-equal?
+   "robot.rkt: Testing if Robot can move from Outside to Inside in UP direction"
+   (robot-forward ROBOT-POINT-N-BELOW-S-WALL 300)
+   ROBOT-POINT-N-INSIDE-CANVAS)
+Test Result: Success
+
+Test Case: 
+  (test-equal?
+   "robot.rkt: Testing if Robot initially outside the canvas, enters the\ncanvas and stops at the TOP edge while moving UP"
+   (robot-forward ROBOT-POINT-N-BELOW-S-WALL 700)
+   ROBOT-POINT-N-AT-N-WALL)
+Test Result: Success
+
+Test Case: 
+  (test-equal?
+   "robot.rkt: Testing if Robot Turns properly and stops at the Right Wall"
+   (robot-forward
+    (robot-left (robot-left (robot-left ROBOT-POINT-N-AT-N-WALL)))
+    80)
+   ROBOT-POINT-E-AT-N-WALL)
+Test Result: Success
+
+Test Case: 
+  (test-equal?
+   "robot.rkt: Testing if Robot is allowed to move freely outside the Canvas"
+   (robot-forward ROBOT-POINT-S-LEFT-W-WALL 800)
+   (robot-left (robot-left ROBOT-POINT-N-LEFT-W-WALL)))
+Test Result: Success
+
+Test Case: 
+  (test-equal?
+   "robot.rkt: Testing the edge case - movement towards TOP-RIGHT Corner"
+   (robot-forward (robot-right (robot-right ROBOT-POINT-E-AT-N-WALL)) 500)
+   ROBOT-POINT-W-AT-N-WALL)
+Test Result: Success
+
+
+Results for Suite robot-tests:
+  Test Successes: 8
+  Test Failures: 0
+  Test Errors: 0
+
+Raw Score: 8/8
+Normalized Score: 10/10
+
+
+Test Name: fsm-tests
+Definitions:
+	(define CANVAS-HEIGHT 100)
+	(define CANVAS-WIDTH 100)
+	(define WHITE-COLOR "white")
+	(define YELLOW-COLOR "yellow")
+	(define RED-COLOR "red")
+	(define GREEN-COLOR "green")
+	(define BC-WORLD (next-state INITIAL-WORLD "a"))
+	(define ACCEPT-WORLD (next-state BC-WORLD "d"))
+	(define ERROR-WORLD (next-state BC-WORLD "a"))
+	(define INIT-STATE-RECT (empty-scene CANVAS-WIDTH CANVAS-HEIGHT WHITE-COLOR))
+	(define BC-STATE-RECT (empty-scene CANVAS-WIDTH CANVAS-HEIGHT YELLOW-COLOR))
+	(define ERROR-STATE-RECT (empty-scene CANVAS-WIDTH CANVAS-HEIGHT RED-COLOR))
+	(define ACCEPT-STATE-RECT (empty-scene CANVAS-WIDTH CANVAS-HEIGHT GREEN-COLOR))
+
+Test Case: 
+  (test-equal?
+   "fsm.rkt: Testing if next-state returns BC-WORLD when key a is pressed in\nINITIAL-WORLD"
+   (next-state INITIAL-WORLD "a")
+   BC-WORLD)
+Test Result: Success
+
+Test Case: 
+  (test-equal?
+   "fsm.rkt: Testing if next-state returns ERROR-WORLD when key x is pressed in\nINITIAL-WORLD"
+   (next-state INITIAL-WORLD "x")
+   ERROR-WORLD)
+Test Result: Success
+
+Test Case: 
+  (test-equal?
+   "fsm.rkt: Testing if next-state returns ERROR-WORLD when key a is pressed in\nBC-WORLD"
+   (next-state BC-WORLD "a")
+   ERROR-WORLD)
+Test Result: Success
+
+Test Case: 
+  (test-equal?
+   "fsm.rkt: Testing if next-state returns BC-WORLD when key b is pressed in\nBC-WORLD"
+   (next-state BC-WORLD "b")
+   BC-WORLD)
+Test Result: Success
+
+Test Case: 
+  (test-equal?
+   "fsm.rkt: Testing if next-state returns BC-WORLD when key c is pressed in\nBC-WORLD"
+   (next-state BC-WORLD "c")
+   BC-WORLD)
+Test Result: Success
+
+Test Case: 
+  (test-equal?
+   "fsm.rkt: Testing if next-state returns ACCEPT-WORLD when key d is pressed in\nBC-WORLD"
+   (next-state BC-WORLD "d")
+   ACCEPT-WORLD)
+Test Result: Success
+
+Test Case: 
+  (test-equal?
+   "fsm.rkt: Testing if next-state returns ERROR-WORLD when key x is pressed in\nBC-WORLD"
+   (next-state BC-WORLD "x")
+   ERROR-WORLD)
+Test Result: Success
+
+Test Case: 
+  (test-equal?
+   "fsm.rkt: Testing if stop? returns false when INITIAL-WORLD is passed"
+   (stop? INITIAL-WORLD)
+   false)
+Test Result: Success
+
+Test Case: 
+  (test-equal?
+   "fsm.rkt: Testing if stop? returns false when BC-WORLD is passed"
+   (stop? BC-WORLD)
+   false)
+Test Result: Success
+
+Test Case: 
+  (test-equal?
+   "fsm.rkt: Testing if stop? returns true when ERROR-WORLD is passed"
+   (stop? ERROR-WORLD)
+   true)
+Test Result: Failure
+actual : #f
+expected : #t
+expression : (check-equal? (stop? ERROR-WORLD) true)
+params : (#f #t)
+
+Test Case: 
+  (test-equal?
+   "fsm.rkt: Testing if stop? returns true when ACCEPT-WORLD is passed"
+   (stop? ACCEPT-WORLD)
+   true)
+Test Result: Success
+
+Test Case: 
+  (test-equal?
+   "fsm.rkt: Testing if accept-state? returns false when INITIAL-WORLD is passed"
+   (accept-state? INITIAL-WORLD)
+   false)
+Test Result: Failure
+actual : #t
+expected : #f
+expression : (check-equal? (accept-state? INITIAL-WORLD) false)
+params : (#t #f)
+
+Test Case: 
+  (test-equal?
+   "fsm.rkt: Testing if accept-state? returns false when BC-WORLD is passed"
+   (accept-state? BC-WORLD)
+   false)
+Test Result: Failure
+actual : #t
+expected : #f
+expression : (check-equal? (accept-state? BC-WORLD) false)
+params : (#t #f)
+
+Test Case: 
+  (test-equal?
+   "fsm.rkt: Testing if accept-state? returns false when ERROR-WORLD is passed"
+   (accept-state? ERROR-WORLD)
+   false)
+Test Result: Success
+
+Test Case: 
+  (test-equal?
+   "fsm.rkt: Testing if accept-state? returns true when ACCEPT-WORLD is passed"
+   (accept-state? ACCEPT-WORLD)
+   true)
+Test Result: Success
+
+Test Case: 
+  (test-equal?
+   "fsm.rkt: Testing if error-state? returns false when INITIAL-WORLD is passed"
+   (error-state? INITIAL-WORLD)
+   false)
+Test Result: Success
+
+Test Case: 
+  (test-equal?
+   "fsm.rkt: Testing if error-state? returns false when BC-WORLD is passed"
+   (error-state? BC-WORLD)
+   false)
+Test Result: Success
+
+Test Case: 
+  (test-equal?
+   "fsm.rkt: Testing if error-state? returns true when ERROR-WORLD is passed"
+   (error-state? ERROR-WORLD)
+   true)
+Test Result: Success
+
+Test Case: 
+  (test-equal?
+   "fsm.rkt: Testing if error-state? returns false when ACCEPT-WORLD is passed"
+   (error-state? ACCEPT-WORLD)
+   false)
+Test Result: Success
+
+
+Results for Suite fsm-tests:
+  Test Successes: 16
+  Test Failures: 3
+  Test Errors: 0
+
+Raw Score: 16/19
+Normalized Score: 8/10
+
+
+Test Name: editor-tests
+Definitions:
+	(define LEFT "left")
+	(define RIGHT "right")
+	(define BACKSPACE "\b")
+	(define RETURN "\r")
+	(define TAB "\t")
+	(define RUBOUT "\u007F")
+	(define TEXT-SIZE 16)
+	(define NEU (edit (string->editor "EU") "N"))
+
+Test Case: 
+  (test-equal?
+   "Performing multiple operations.\nGoing right 2 times, causes editor-pre to be 12 and editor-post to be 34.\nAfter processing backspace, editor-pre will be 1 and editor-post will be 34.\nProcessing left, editor-pre will be empty and editor-post will be 134.\nBackspace and left should have no effedct on editor-pre and post"
+   (editor-post
+    (edit
+     (edit
+      (edit
+       (edit (edit (edit (string->editor "1234") RIGHT) RIGHT) BACKSPACE)
+       LEFT)
+      BACKSPACE)
+     LEFT))
+   "134")
+Test Result: Error
+substring: contract violation
+  expected: exact-nonnegative-integer?
+  given: -1
+  argument position: 3rd
+  other arguments...:
+   ""
+   0
+
+Test Case: 
+  (test-equal?
+   "Performing multiple operation.\nRight should not have any effect as editor-post is empty.\nLeft will make editor-pre empty and editor-post will be 'a'.\nTAB will be ignored.\nKeyEvent 'b' will result in editor-pre to be 'b' and editor-post as 'a'.\nRUBOUT and up will be ignored.\nKeyEvent 'c' will resule in editor-pre to be 'bc' and "
+   (editor-post
+    (edit
+     (edit
+      (edit
+       (edit
+        (edit (edit (edit (edit (string->editor "") "a") RIGHT) LEFT) TAB)
+        "b")
+       RUBOUT)
+      "up")
+     "c"))
+   "a")
+Test Result: Error
+string-ith: expected an exact integer in [0, 0) (i.e., less than the length of the given string) for the second argument, but received 0
+
+Test Case: 
+  (test-equal?
+   "After processing KeyEvent '1' , '2' and '@', editor-pos will be 3\nas editor-pre is '12@'"
+   (editor-pos (edit (edit (edit (string->editor "test") "1") "2") "@"))
+   3)
+Test Result: Success
+
+Test Case: 
+  (test-equal?
+   "KeyEvent 's' causes string in the editor to go beyond canvas,\nhence it should be ignored."
+   (editor-pre
+    (edit (string->editor "llllllsslllllzleeeaaillllsssllllllllllllllll") "s"))
+   "")
+Test Result: Failure
+actual : s
+expected : 
+expression : (check-equal? (editor-pre (edit (string->editor llllllsslllllzleeeaaillllsssllllllllllllllll) s)) )
+params : (s )
+
+Test Case: 
+  (test-equal?
+   "Pressing backspace should delete the space. Resultant string should be\nEU"
+   (editor-post (edit NEU BACKSPACE))
+   "EU")
+Test Result: Success
+
+Test Case: 
+  (test-equal?
+   "Pressing right key shifts the cursor in between E and U"
+   (editor-pos (edit NEU RIGHT))
+   2)
+Test Result: Success
+
+Test Case: 
+  (test-equal?
+   "Pressing left key shifts the cursor at the begining of the editor"
+   (editor-pos (edit NEU LEFT))
+   0)
+Test Result: Success
+
+Test Case: 
+  (test-equal?
+   "Pressing \r should not affect the state of the editor"
+   (editor-pre (edit NEU RETURN))
+   "N")
+Test Result: Failure
+actual : N
+expected : N
+expression : (check-equal? (editor-pre (edit NEU RETURN)) N)
+params : (N N)
+
+Test Case: 
+  (test-equal?
+   "Pressing f1 key should not affect the state of the editor"
+   (editor-post (edit NEU "f1"))
+   "EU")
+Test Result: Success
+
+Test Case: 
+  (test-equal?
+   "Pressing spacebar appends space to editor-pre"
+   (editor-pre (edit (edit (edit NEU RIGHT) RIGHT) " "))
+   "NEU ")
+Test Result: Success
+
+Test Case: 
+  (test-equal?
+   "Pressing left and *, will result in editor-pre as * and editor-post as NEU"
+   (editor-pre (edit (edit NEU LEFT) "*"))
+   "*")
+Test Result: Success
+
+
+Results for Suite editor-tests:
+  Test Successes: 7
+  Test Failures: 2
+  Test Errors: 2
+
+Raw Score: 7/11
+Normalized Score: 6/10
+
+
+Overall Results:
+  Test Successes: 31
+  Test Failures: 5
+  Test Errors: 2
+
+Raw Score: 31/38
+Normalized Score: 8/10
+
