@@ -40,7 +40,8 @@
 ; - "left"
 ; - "top"
 ; - "down"
-; INTERP: represents a canvas direction where "right" is x-increasing.
+; INTERP: represents a canvas direction where "right" is x-increasing and "left"
+; is x-decreasing, "down" is y-increasing and "top" is y-decreasing.
 (define RIGHT "right")
 (define LEFT "left")
 (define TOP "top")
@@ -425,4 +426,113 @@
 (define (ball-y b)
   (ball-yposn b))
 
-(run INITIAL-WORLD)
+;(run INITIAL-WORLD)
+
+;.........Alternate Data Definitions with their Pros and Cons..........
+
+; 1) NESTED STRUCTURES
+
+; A Ball is a (make-ball Posn Direction Number)
+; INTERP: Posn is a (make-Posn Coordinate Coordinate) that 
+; are the ball's x position and y position respectively
+; Direction is a (make-Direction xdir ydir) 
+; that refers to ball's direction along x axis which can be either or 
+; left or right and y-Direction refers to ball's direction along y axis which 
+; can be either of top or down, and Number represents velocity in pixels/tick
+
+; (define-struct ball (Posn Direction Velocity))
+ 
+; TEMPLATES:
+; posn-fn : Posn -> ???
+; (define (posn-fn p)
+; (... (Posn-x p) ...
+;      (Posn-y p) ...))
+
+; direction-fn : Direction -> ???
+; (define (direction-fn d)
+; (... (Direction-xdir d) ...
+;      (Direction-ydir d) ...))
+
+; ball-fn : Ball -> ???
+; (define (ball-fn b)
+;  (... (make-posn x y) ...
+;       (make-direction xdir ydir) ...
+;       (ball-vel b)) ...))
+
+; PROS:
+; Nesting information is natural. This can be done with nested structure 
+; instances. Doing so makes it easy to interpret the data in the application 
+; domain of the program, and it is also straightforward to go from examples 
+; of information to data. 
+; Readability of the code increases. 
+
+; CONS
+; The task of going back and forth between information and data in 
+; Nested Structures makes decomposition of data in functions such as 
+; rendering the next world, calculating the next position of x and y etc complex
+
+; In order to over come the same the current data definition clearly separates 
+; each coordinate and direction keeping the code organised and easy to decompose
+
+; 2) USING MODULO FUNCTION FOR DETERMINING DIRECTIONS
+
+; To have each of the directions of 'left','right','top' and 'down' 
+; represented with numbers 1,2,3,4 respectively.
+; And Use the Modulo function to on the direction component of the ball 
+; structure to determine the Ball structure.
+
+; A Direction is one of:
+; - 1
+; - 2
+; - 3
+; - 4
+; INTERP: represents a canvas direction where 1 is x-decreasing, 2 is 
+; x-decreasing, 3 is y-increasing and 4 is y-decreasing.
+; (define LEFT 1)
+; (define RIGHT 2)
+; (define TOP 3)
+; (define DOWN 4)
+
+; use the same in the Ball sructure, and inorder to determine the direction 
+; the following function could be used
+; determine-dir: Direction -> Direction
+; Uses the modulo operation to determine the direction
+; (define (determine-dir d) 
+;   (cond
+;     [(= 1 (modulo 5 d)) LEFT ... ]
+;     [(= 2 (modulo 5 d)) RIGHT ... ]
+;     [(= 3 (modulo 5 d)) TOP ... ]
+;     [(= 4 (modulo 5 d)) DOWN ... ]))
+
+; PROS:
+; The simplicity of the modulo operation are one of the reasons this 
+; data definition can be used. Also the multiple string compare functions 
+; can be removed if this definition is adopted.
+
+; CONS:
+; A mathematical calculation needs to be made every time a direction is to 
+; change or to be determined. 
+; The current method though uses strings, is a lot more easier to keep 
+; track of rather than numbers hance did not use this data definition
+
+; 3) USING 1 and 0 as values for DIRECTION
+
+; A Direction can just be one of:
+; - 1
+; - 0
+; INTERP: 1 represents right and down directions and 0 represents left and 
+; top directions of the ball 
+; (define LEFT 0)
+; (define RIGHT 1)
+; (define TOP 0)
+; (define DOWN 1)
+
+; PROS: Every time the ball hits the boundary on the left 1 has to be added to 
+; its direction component of the ball structure to change its direction to 
+; represent right and similarly when it hits the right boundary, 1 is 
+; subtracted from its direction component. The ease of calculations and not 
+; necessitating a separate direction function to change the directions could be 
+; reasons to use this data definition.
+
+; CONS: The directions of TOP and LEFT hold same values. 
+; This could lead to errors in the code.
