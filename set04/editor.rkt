@@ -61,17 +61,17 @@
 (begin-for-test
   (check-equal? (render (make-Editor (list "x" "y" "z") (list "a" "b" "c")))
                 (overlay/align "left" "center"
-                               (beside (text "xyz" 16 "black") 
+                               (beside (text "xyz" FONT-SIZE FONT-COLOR) 
                                        CURSOR
-                                       (text "abc" 16 "black"))
+                                       (text "abc" FONT-SIZE FONT-COLOR))
                                MT)
                 "'render' function failed"))
 ; STRATEGY: Daa Decomposition on ed : Editor
 (define (render ed)
   (overlay/align "left" "center"
-                 (beside (text (extract-pre ed) 16 "black") 
+                 (beside (text (extract-pre ed) FONT-SIZE FONT-COLOR) 
                          CURSOR
-                         (text (extract-post ed) 16 "black"))
+                         (text (extract-post ed) FONT-SIZE FONT-COLOR))
                  MT))
 
 ; extract-pre: Editor -> String
@@ -259,19 +259,52 @@
 (define (handle-tab ed)
   (make-Editor (Editor-preString ed) (Editor-postString ed)))
 
-; handle-insert: Editor -> Editor
+; handle-insert: Editor Key -> Editor
 ; Handles insertion of characters after corresponding keys were pressed
 ; EXAMPLES:
 (begin-for-test
   (check-equal? (handle-insert
                  (make-Editor (list "x" "y" "z") (list "a" "b" "c")) "a") 
                 (make-Editor (list "x" "y" "z" "a") (list "a" "b" "c"))
-                "Function 'handle-insert' failed"))
+                "Function 'handle-insert' failed")
+  (check-equal? (handle-insert
+                 (make-Editor 
+                  (explode "abcdefghijklmnop") 
+                  (explode "qrstuvwxyz")) "a") 
+                (make-Editor 
+                  (explode "abcdefghijklmnop") 
+                  (explode "qrstuvwxyz"))
+                "Function 'check-if-too-wide?' failed"))
 ; STRATEGY: Data Decomposition on ed : Editor
 (define (handle-insert ed ke)
-  (make-Editor 
-   (append (Editor-preString ed) (cons ke '())) 
-   (Editor-postString ed)))
+  (if (check-if-too-wide? ed ke) 
+      (handle-tab ed)
+      (make-Editor 
+       (append (Editor-preString ed) (cons ke '())) 
+       (Editor-postString ed))))
+
+; check-if-too-wide? : Editor Key -> Boolean
+; Checks if after insertion the text will wrap over the margins of editor
+; EXAMPLES:
+(begin-for-test 
+  (check-equal? (check-if-too-wide? 
+                 (make-Editor (list "x" "y" "z") (list "a" "b" "c")) "a") 
+                #false
+                "Function 'check-if-too-wide?' failed")
+  (check-equal? (check-if-too-wide?
+                 (make-Editor 
+                  (explode "abcdefghijklmnop") 
+                  (explode "qrstuvwxyz")) "a") 
+                #true
+                "Function 'check-if-too-wide?' failed"))
+; STRATEGY: Data Decomposition on ed: Editor
+(define (check-if-too-wide? ed ke)
+  (> (image-width 
+      (text 
+       (implode 
+        (append 
+         (append (Editor-preString ed) (cons ke '())) (Editor-postString ed))) 
+       FONT-SIZE FONT-COLOR)) WIDTH))
 
 ; string->editor : String -> Editor
 ; Returns an Editor containing text str and cursor at position 0.
@@ -319,7 +352,7 @@
 (define (editor-pos e) 
   (string-length (implode (Editor-preString e))))
 
-;(run (make-Editor (explode "hello") (explode "world")))
+(run (make-Editor (explode "hello") (explode "world")))
 
 
 ; ............Alternate data definition for editor.rkt................
