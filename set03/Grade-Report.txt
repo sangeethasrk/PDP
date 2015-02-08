@@ -1,0 +1,53 @@
+CCS ID: geethsrk
+Husky ID: sivaramakrishnan.s
+TA Names: Jai, Prasad
+
+Grade Report
+
+Offline Grading:
+
+Correctness:           2/10
+Data Design:            3/5
+Function Specification: 3/5
+Implementation:         4/5
+Style:                  3/5
+
+Deductions:
+
+Offline Total:         15/30
+
+Notes:
+
+- Style -> four functions missing test case coverage (-2) 
+	-> Reduced less marks for test case coverage since exp. given was a bit convincing
+- Data Design (-2)
+	-> Template missing for Direction 
+	-> Ball should have been in the World, Ball shouldn't be a World
+- Function Specification (-2)
+	-> In correct strategy for ball-inside-canvas?, next-x etc ..
+- Implementation (-1)
+	-> zero-velocity functoin has extraneous code
+
+Online Grading:
+
+Q&A:                      10/10
+Data Design Alternatives:  3/5
+Presentation:              5/5
+
+Deductions:
+
+Online Total:             18/20
+
+Notes:
+- Alternate data definitions could have been better.
+
+
+
+Overall Score: 33/50
+
+Notes:
+In case of doubt regarding the grading :-
+a. TA Hours 
+   Friday, 1-2pm, WVH362 (3rd floor, glass room) 
+b. Open an issue ticket on piazza
+- 
