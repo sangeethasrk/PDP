@@ -9,9 +9,9 @@
 
 (provide edit)
 (provide string->editor)
-;(provide editor-pre)
-;(provide editor-post)
-;(provide editor-pos)
+(provide editor-pre)
+(provide editor-post)
+(provide editor-pos)
 
 ; constants 
 (define HEIGHT 20) ; the height of the editor 
@@ -37,58 +37,15 @@
 ; Lo1S is a list of single characters
 
 ; An Editor is (make-Editor Lo1S Lo1S)
-; INTERP: it is a (make-Editor preString postString)
-; We obtain the text in the displayed editor using 
-; (string-append (implode (rev postString)) (implode postString))
+; INTERP: it is a (make-Editor preString postString)with a cursor between 
+; the preString and the postString
 (define-struct Editor [preString postString])
-; An editor is (make-editor Lo1S Lo1S) 
 
 ; TEMPLATE:
 ; editor-fn: editor -> ???
 ; (define (editor-fn ed)
 ;  (... (Editor-preString ed) ... 
 ;       (Editor-postString ed) ...))
-
-; rev: Lo1S -> Lo1S 
-; produces a reverse version of the given list
-; EXAMPLES:
-(begin-for-test
-  (check-equal? (rev (cons "a" (cons "b" (cons "c" '()))))
-                (cons "c" (cons "b" (cons "a" '())))
-                "rev function failed"))
-; TEMPLATE:
-;(define (rev l)
-;  (cond
-;    [(empty? l) ...]
-;    [else (... (first l) ...
-;           ... (rev (rest l)) ...)]))
-
-; STRATEGY: Data Decomposition on l : Lo1S
-(define (rev l)
-  (cond
-    [(empty? l) '()]
-    [else (add-at-end (rev (rest l)) (first l))]))
-
-; add-at-end: Lo1s 1String -> Lo1s
-; creates a new list by adding s to the end of l
-; EXAMPLES: 
-(begin-for-test
-  (check-equal? (add-at-end (cons "c" (cons "b" '())) "a")
-                (cons "c" (cons "b" (cons "a" '())))
-                "add-at-end function failed"))
-
-; TEMPLATE:
-; (define (add-at-end l s)
-; (cond
-;  [(empty? l) ...]
-;  [else (... (first l) ...
-;             ... (add-at-end (rest l) s) ...)]))
-
-; STRATEGY: Data Decomposition on l : Lo1S
-(define (add-at-end l s)
-  (cond
-    [(empty? l) (cons s '())]
-    [else (cons (first l) (add-at-end (rest l) s))]))
 
 ; run: Editor -> Image
 ; The function consumes an editor and renders an Image. It launches an 
@@ -171,8 +128,8 @@
     [(key=? ke "\b") (handle-delete ed)]
     [(key=? ke "left") (handle-left-toggle ed)]
     [(key=? ke "right") (handle-right-toggle ed)]
-[(or (key=? ke "\t") (key=? ke "\u007F")) (handle-tab ed)]
-[else (handle-insert ed ke)]))
+    [(or (key=? ke "\t") (key=? ke "\u007F")) (handle-tab ed)]
+    [else (handle-insert ed ke)]))
 
 ; handle-delete: Editor -> Editor
 ; The function handles the backspace key event
@@ -181,10 +138,18 @@
   (check-equal? (handle-delete 
                  (make-Editor (list "x" "y" "z") (list "a" "b" "c"))) 
                 (make-Editor (list "x" "y") (list "a" "b" "c"))
+                "Function 'handle-delete' failed")
+  (check-equal? (handle-delete 
+                 (make-Editor '() (list "a" "b" "c"))) 
+                (make-Editor '() (list "a" "b" "c"))
                 "Function 'handle-delete' failed"))
 ; STRATEGY: Data Decomposition on ed : Editor
 (define (handle-delete ed)
-  (make-Editor (remove-last(Editor-preString ed)) (Editor-postString ed)))
+  (cond
+    [(empty? (Editor-preString ed)) (make-Editor '() (Editor-postString ed))]
+    [else (make-Editor 
+           (remove-last(Editor-preString ed)) 
+           (Editor-postString ed))]))
 
 ; remove-last: Lo1S -> Lo1S
 ; The function consumes a list and renders a list with its last element omitted
@@ -192,10 +157,15 @@
 (begin-for-test
   (check-equal? (remove-last (list "x" "y" "z")) 
                 (list "x" "y")
+                "Function 'remove-last' failed")
+  (check-equal? (remove-last '()) 
+                '()
                 "Function 'remove-last' failed"))
 ; STRATEGY: Function Composition
 (define (remove-last l)
-  (explode (string-remove-last (implode l))))
+  (cond 
+    [(empty? l) '()]
+    [else  (explode (string-remove-last (implode l)))]))
 
 ; string-remove-last : String -> String
 ; The function returns a string with its last character omitted
@@ -215,12 +185,18 @@
   (check-equal? (handle-left-toggle 
                  (make-Editor (list "x" "y" "z") (list "a" "b" "c"))) 
                 (make-Editor (list "x" "y") (list "z" "a" "b" "c"))
+                "Function 'handle-left-toggle' failed")
+  (check-equal? (handle-left-toggle 
+                 (make-Editor '() (list "a" "b" "c"))) 
+                (make-Editor '() (list "a" "b" "c"))
                 "Function 'handle-left-toggle' failed"))
 ; STRATEGY: Data Decomposition on ed: Editor
 (define (handle-left-toggle ed)
-  (make-Editor 
-   (remove-last (Editor-preString ed)) 
-   (append (get-last (Editor-preString ed)) (Editor-postString ed))))
+  (cond
+    [(empty? (Editor-preString ed)) (make-Editor '() (Editor-postString ed))]
+    [else (make-Editor 
+           (remove-last (Editor-preString ed)) 
+           (append (get-last (Editor-preString ed)) (Editor-postString ed)))]))
 
 ; get-last: Lo1S -> Lo1S
 ; The function gets the last element from an input string 
@@ -229,10 +205,15 @@
 (begin-for-test
   (check-equal? (get-last (list "x" "y" "z")) 
                 (list "z")
+                "Function 'get-last' failed")
+  (check-equal? (get-last '()) 
+                '()
                 "Function 'get-last' failed"))
 ; STRATEGY: Function Composition
 (define (get-last l)
-  (explode (string-last (implode l))))
+  (cond 
+    [(empty? l) '()]
+    [else (explode (string-last (implode l)))]))
 
 ; string-last : String -> 1String
 ; The function gets the last character of the input string.
@@ -252,12 +233,19 @@
   (check-equal? (handle-right-toggle 
                  (make-Editor (list "x" "y" "z") (list "a" "b" "c"))) 
                 (make-Editor (list "x" "y" "z" "a") (list "b" "c"))
+                "Function 'handle-right-toggle' failed")
+  (check-equal? (handle-right-toggle 
+                 (make-Editor (list "x" "y" "z") '())) 
+                (make-Editor (list "x" "y" "z") '())
                 "Function 'handle-right-toggle' failed"))
 ; STRATEGY: Data Decomposition on ed: Editor
 (define (handle-right-toggle ed)
-  (make-Editor    
-   (append (Editor-preString ed) (cons (first (Editor-postString ed)) '()))
-   (rest (Editor-postString ed))))
+  (cond
+    [(empty? (Editor-postString ed)) (make-Editor (Editor-preString ed) '())]
+    [else (make-Editor    
+           (append (Editor-preString ed) 
+                   (cons (first (Editor-postString ed)) '()))
+           (rest (Editor-postString ed)))]))
 
 ; handle-tab: Editor -> Editor
 ; The functions handle the KeyEvent of tab and delete
@@ -330,3 +318,72 @@
 ; STRATEGY: Function Composition
 (define (editor-pos e) 
   (string-length (implode (Editor-preString e))))
+
+;(run (make-Editor (explode "hello") (explode "world")))
+
+
+; ............Alternate data definition for editor.rkt................
+
+; [A] 
+;     An editor is a (make-editor Lo1S Number)
+
+;    (define-struct Editor [editedstring position])
+
+; INTERP: The editor has a single string storing the entire text
+; 'position' here is a number and it denotes the number of characters from 
+; left where the cursor is currently placed
+
+; TEMPLATE:
+; editor-fn: Editor -> ???
+
+; (define (editor-fn ed)
+;   (... Editor-editedstring ed)...)
+;   (... Editor-position ed)... ))
+
+
+; Pros: 
+; Separate processing of pre and post string as lists would not be required. 
+
+; Cons: there are more cons to this definition than pros as listed below: 
+; 1) Each render function would require a calculation to extract the current 
+; position of cursor
+; 2) The draw function becomes twice as complicated than it is right now. 
+; reason:
+; Currently the pre and post part of the editor are rendered as individual 
+; text images and the cursor is places between them at all tumes. If the 
+; structure is changed to this definition the position of the cursor would be 
+; hard to calculate based on changing font sizes etc
+
+; [B] 
+;     An editor is a (make-editor Lo1S Lo1S Number)
+
+;    (define-struct Editor [pre post editorsize])
+
+; INTERP: The editor contains two lists, one each for string before the cursor
+; and string after the cursor. It also contains the combined sizes of 
+; the two lists. 
+
+; Explanation:
+; A pre defined variable stating the maximum editor size can be declared.
+; Value of any instance of the editor can at all times be evaluated and 
+; compared with this variable. 
+
+; TEMPLATE:
+; editor-fn: Editor -> ???
+
+; (define (editor-fn ed)
+;   (... (Editor-editedstring ed)...)
+;   (... (Editor-position ed)... )
+;   (... (Editor-editorsize) ... ))
+
+; Pros:
+; The insert operation on the editor and the problem of text wrapping over the 
+; borders of the empty-scene gets highly simplified as it involves a single 
+; operation of comparing values
+
+; Cons:
+; 1) This component of the structure will be required only for the single
+; operation of insert and not delete, moving left or right etc. The vaue can be 
+; always calculated from individual pre and post strings for a single operation.
+; 2) Unnecessary decomposition of the third component for all instances
+; of sructres in all operations
