@@ -352,7 +352,7 @@
 (define (editor-pos e) 
   (string-length (implode (Editor-preString e))))
 
-(run (make-Editor (explode "hello") (explode "world")))
+;(run (make-Editor (explode "hello") (explode "world")))
 
 
 ; ............Alternate data definition for editor.rkt................
