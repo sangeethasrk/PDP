@@ -5,15 +5,15 @@
 (require 2htdp/image)
 (require "extras.rkt")
 (require rackunit)
-(define TIME-ON-TASK 13)
+(define TIME-ON-TASK 20)
 
 (provide arrangements)
-;(provide insert-everywhere/in-all-words)
-;(provide arrangement-main)
+(provide insert-everywhere/in-all-words)
+(provide arrangement-main)
 
 ; empty-list is an empty list 
 ; INTERP: Refers to a list that contains no elements in it.
-(define EMPTY-LIST (list '()))
+(define EMPTY-LIST '())
 
 ; A 1String is a string of length 1
 ; WHERE: the inputs are only alphabetic characters from a to z
@@ -37,47 +37,73 @@
 ;    [(empty? w) ...]
 ;    [else (... (first w) ... (arrangements (rest w)) ...)]))
 ; EXAMPLES: 
-(begin-for-test
-  (check-equal? (arrangements (list "d" "e"))
-                (cons "de" (cons "ed" '()))))
+
 ; STRATEGY: Data Decomposition on w : Word
 (define (arrangements w)
   (cond
     [(empty? w) EMPTY-LIST]
-    [else (insert-everywhere/in-all-words (first w)
-            (arrangements (rest w)))]))
+    [else
+     (if (empty? (rest w)) 
+         (cons (first w) EMPTY-LIST) 
+         (insert-everywhere/in-all-words (first w) (arrangements (rest w))))]))
 
 (define (insert-everywhere/in-all-words s lw)
   (cond
-    [(empty? lw) (list '())]
-    [else (append (insert-everywhere-in-single-word s (first lw))
-            (insert-everywhere/in-all-words s (rest lw)))]))
+    [(empty? lw) EMPTY-LIST]
+    [else (if (empty? (rest lw)) 
+              (insert-everywhere-in-single-word s (cons (first lw) '()))
+              (append (insert-everywhere-in-single-word s (first lw))
+                      (insert-everywhere/in-all-words s (rest lw))))]))
 
 (define (insert-everywhere-in-single-word s w)
   (cond 
-    [(empty? w) (list '())]
-    [else (append (insert-at-beginning s w) 
-                  (insert-in-between s w) 
-                  (insert-at-end s w))]))
+    [(empty? w) EMPTY-LIST]
+    [else (if (empty? (rest w))
+              (cons (insert-at-beginning s (cons w '()))
+                (cons (insert-in-between s (cons w '()))
+                      (cons (insert-at-end s (cons w '())) EMPTY-LIST)))
+              (cons (insert-at-beginning s w)
+                (cons (insert-in-between s w)
+                      (cons (insert-at-end s w) EMPTY-LIST))))]))
 
 (define (insert-at-beginning s w)
   (cond
     [(empty? w) EMPTY-LIST]
-    [else (append (cons s '()) w)]))
+    [else (append (cons s EMPTY-LIST) w)]))
 
 (define (insert-at-end s w)
   (cond 
     [(empty? w) EMPTY-LIST]
-    [else (append w (cons s '()))]))
+    [else (append w (cons s EMPTY-LIST))]))
 
 (define (insert-in-between s  w )
   (cond
     [(empty? (rest w)) EMPTY-LIST]
-    [else (cons (append (cons (first w) '()) (cons s '()) (rest w))
-                (cons 
-                 (append (cons (first w) '()) (infront (rest w) s)) '()))]))
-    
-(define (infront w s)
-  (cond 
+    [else (insert (cons (first w) EMPTY-LIST) s (rest w))]))
+
+(define (insert l s w)
+  (cond
     [(empty? w) EMPTY-LIST]
-    [else (insert-in-between s w)]))
+    [else (if (empty? (rest w))
+              (append (append l (cons s EMPTY-LIST)) (rest w))
+              (append 
+               (append (append l (cons s EMPTY-LIST)) (rest w))
+               (insert (append l (cons (first w) EMPTY-LIST)) s (rest w))))]))
+
+(define (implode-each l)
+  (cond
+    [(empty? l) EMPTY-LIST]
+    [else (if 
+           (= (string-length (implode (first l))) 0) 
+           (implode-each (rest l))
+           (append 
+            (cons (implode (first l)) EMPTY-LIST) 
+            (implode-each (rest l))))]))
+
+(define (arrangement-main str)
+  (arrangements (explode str)))
+
+(begin-for-test 
+  (check-equal? (arrangement-main "ab")
+                (list "ab" "ba")))
+;                
