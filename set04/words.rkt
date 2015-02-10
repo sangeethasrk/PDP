@@ -9,7 +9,7 @@
 
 (provide arrangements)
 (provide insert-everywhere/in-all-words)
-(provide arrangement-main)
+;(provide arrangement-main)
 
 ; empty-list is an empty list 
 ; INTERP: Refers to a list that contains no elements in it.
@@ -51,20 +51,16 @@
   (cond
     [(empty? lw) EMPTY-LIST]
     [else (if (empty? (rest lw)) 
-              (insert-everywhere-in-single-word s (cons (first lw) '()))
+              (insert-everywhere-in-single-word s lw)
               (append (insert-everywhere-in-single-word s (first lw))
                       (insert-everywhere/in-all-words s (rest lw))))]))
 
 (define (insert-everywhere-in-single-word s w)
   (cond 
     [(empty? w) EMPTY-LIST]
-    [else (if (empty? (rest w))
-              (cons (insert-at-beginning s (cons w '()))
-                (cons (insert-in-between s (cons w '()))
-                      (cons (insert-at-end s (cons w '())) EMPTY-LIST)))
-              (cons (insert-at-beginning s w)
+    [else (cons (insert-at-beginning s w)
                 (cons (insert-in-between s w)
-                      (cons (insert-at-end s w) EMPTY-LIST))))]))
+                      (cons (insert-at-end s w) EMPTY-LIST)))]))
 
 (define (insert-at-beginning s w)
   (cond
@@ -85,7 +81,7 @@
   (cond
     [(empty? w) EMPTY-LIST]
     [else (if (empty? (rest w))
-              (append (append l (cons s EMPTY-LIST)) (rest w))
+              (append (append l (cons s EMPTY-LIST)) (cons (first w) '()))
               (append 
                (append (append l (cons s EMPTY-LIST)) (rest w))
                (insert (append l (cons (first w) EMPTY-LIST)) s (rest w))))]))
@@ -101,9 +97,4 @@
             (implode-each (rest l))))]))
 
 (define (arrangement-main str)
-  (arrangements (explode str)))
-
-(begin-for-test 
-  (check-equal? (arrangement-main "ab")
-                (list "ab" "ba")))
-;                
+  (implode-each (arrangements (explode str))))            
