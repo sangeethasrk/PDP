@@ -735,9 +735,15 @@
       (* (- stpt edpt) (- 1 2))
       (- stpt edpt)))
 
+; end? : World -> Boolean 
+; Checks stopping condition
+; Staryegy: Data Decomposition
 (define (end? w)
   (collide-with-activewall? (world-balls w) (world-walls w)))
 
+; ball-collides-with-activewall?: [List-of Ball] [List-of Wall] -> Boolean 
+; Checks whether ball collides with active wall
+; STRATEGY: Data Decomposition on w : [List-of Wall]
 (define (collide-with-activewalls? b w)
   (cond 
     [(empty? w) #false]
@@ -745,7 +751,7 @@
               (ball-collides-with-activewall? b (first w)) #false)]))
 
 ; ball-collides-with-activewall?: [List-of Ball] Wall -> Boolean 
-; Checks whether wall collides with active wall
+; Checks whether ball collides with active wall
 ; STRATEGY: Data Decomposition on b : [List-of Ball]
 (define (ball-collides-with-activewall? b w)
   (cond
