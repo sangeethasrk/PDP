@@ -7,11 +7,11 @@
 (require 2htdp/image)
 (define TIME-ON-TASK 45)
 
-;(provide INITIAL-WORLD)
-;(provide next-world)
-;(provide key-handler)
-;(provide mouse-handler)
-;(provide end?)
+(provide INITIAL-WORLD)
+(provide next-world)
+(provide key-handler)
+(provide mouse-handler)
+(provide end?)
 ;(provide get-balls)
 ;(provide mk-ball)
 ;(provide replace-balls)
@@ -184,7 +184,7 @@
 (define BALL-X-LEFT-EDGE BALL-RADIUS) ; x Coordinate
 (define BALL-Y-DOWN-EDGE (- HEIGHT BALL-RADIUS)) ; y Coordinate
 (define BALL-Y-TOP-EDGE BALL-RADIUS) ; y Coordinate
-(define INITIAL-WORLD (make-world INIT-BALL '() VERTICLE 1 0 55))
+(define INITIAL-WORLD (make-world (cons INIT-BALL '()) '() VERTICLE 1 0 55))
 
 ; run : World -> World
 ; Starts the simulation.
@@ -204,7 +204,7 @@
    (world-orientation w)
    (world-level w)
    (world-score w)
-   (get-goalscore (world-level w) (world-goalscore w))))
+   (get-goalscore (world-level w))))
 
 (define (update-ball-list balls walls type)
   (cond 
@@ -279,7 +279,7 @@
                              (calc-ball-next 
                               (ball-xposn b) (ball-direc b) (ball-vel b) type) 
                              minor-cood)))]
-    [(horizantal? type) (or 
+    [(horizontal? type) (or 
                          (and (< (ball-yposn b) minor-cood) 
                               (<= 
                                (calc-ball-next 
@@ -296,10 +296,10 @@
     [(verticle? t) (next-posn a (dir-xdir d) (velocity-xvel v))]
     [(horizontal? t) (next-posn a (dir-ydir d) (velocity-yvel v))]))
 
-(define (next-ball-inside-canvas b)
+(define (next-ball-inside-canvas b t)
   (make-ball
-   (cal-ball-next (ball-xposn b) (ball-direc b) (ball-vel b) type)
-   (cal-ball-next (ball-yposn b) (ball-direc b) (ball-vel b) type)
+   (calc-ball-next (ball-xposn b) (ball-direc b) (ball-vel b) t)
+   (calc-ball-next (ball-yposn b) (ball-direc b) (ball-vel b) t)
    (ball-vel b)
    (ball-direc b)))
 
@@ -370,7 +370,7 @@
               (update-ball-xdirec b (rest w)))]))
 
 (define (get-xchanged b)
-  (getchanged-xdir (ball-xposn b) (direction-xdir (ball-direc d)) (ball-vel b)))
+  (getchanged-xdir (ball-xposn b) (dir-xdir (ball-direc b)) (ball-vel b)))
 
 (define (update-xdir b w)
   (cond
@@ -379,24 +379,30 @@
      (cond
        [(and (>= (next-posn 
                   (ball-xposn b) 
-                  (direction-xdir (ball-direc b)) 
+                  (dir-xdir (ball-direc b)) 
                   (velocity-xvel (ball-vel b))) (wall-minor w))
              (< (ball-xposn b) (wall-minor w))
-             (down? (direction-xdir (ball-direc b)))) TOP DOWN])]))
+             (down? (dir-xdir (ball-direc b)))) TOP]
+       [(and (<= (next-posn 
+                  (ball-xposn b) 
+                  (dir-xdir (ball-direc b)) 
+                  (velocity-xvel (ball-vel b))) (wall-minor w))
+             (> (ball-xposn b) (wall-minor w))
+             (top? (dir-xdir (ball-direc b)))) TOP])]))
 
 (define (change-xdir b minor)
   (cond
-    [(right? (direction-xdir (ball-direc b))) 
+    [(right? (dir-xdir (ball-direc b))) 
      (if (and (< (ball-xposn b) minor) 
               (>= (next-posn 
                    (ball-xposn b) 
-                   (direction-xdir (ball-direc b)) 
+                   (dir-xdir (ball-direc b)) 
                    (velocity-xvel (ball-vel b))) minor)) LEFT RIGHT)]
-    [(left? (direction-xdir (ball-direc b))) 
+    [(left? (dir-xdir (ball-direc b))) 
      (if (and (> (ball-xposn b) minor) 
               (<= (next-posn 
                    (ball-xposn b) 
-                   (direction-xdir (ball-direc b)) 
+                   (dir-xdir (ball-direc b)) 
                    (velocity-xvel (ball-vel b))) minor)) RIGHT LEFT)]
     [else (get-xchanged b)]))
 
@@ -408,7 +414,7 @@
               (update-ball-ydirec b (rest w)))]))
 
 (define (get-ychanged b)
-  (getchanged-ydir (ball-yposn b) (direction-ydir (ball-direc d)) (ball-vel b)))
+  (getchanged-ydir (ball-yposn b) (dir-ydir (ball-direc b)) (ball-vel b)))
 
 (define (update-ydir b w)
   (cond
@@ -416,31 +422,31 @@
      (cond
        [(and (>= (next-posn 
                   (ball-yposn b) 
-                  (direction-ydir (ball-direc b)) 
+                  (dir-ydir (ball-direc b)) 
                   (velocity-yvel (ball-vel b))) (wall-minor w))
              (< (ball-yposn b) (wall-minor w))
-             (right? (direction-ydir (ball-direc b)))) LEFT RIGHT]
+             (right? (dir-ydir (ball-direc b)))) LEFT]
        [(and (>= (next-posn 
                   (ball-yposn b) 
-                  (direction-ydir (ball-direc b)) 
+                  (dir-ydir (ball-direc b)) 
                   (velocity-yvel (ball-vel b))) (wall-minor w))
              (< (ball-yposn b) (wall-minor w))
-             (left? (direction-ydir (ball-direc b)))) RIGHT LEFT])]
+             (left? (dir-ydir (ball-direc b)))) RIGHT])]
     [(horizontal? (wall-type w)) (change-ydir b (wall-minor w))]))
 
 (define (change-ydir b minor)
   (cond
-    [(top? (direction-ydir (ball-direc b))) 
+    [(top? (dir-ydir (ball-direc b))) 
      (if (and (< (ball-yposn b) minor) 
               (>= (next-posn 
                    (ball-yposn b) 
-                   (direction-ydir (ball-direc b)) 
+                   (dir-ydir (ball-direc b)) 
                    (velocity-yvel (ball-vel b))) minor)) LEFT RIGHT)]
-    [(left? (direction-ydir (ball-direc b))) 
+    [(left? (dir-ydir (ball-direc b))) 
      (if (and (> (ball-yposn b) minor) 
               (<= (next-posn 
                    (ball-yposn b) 
-                   (direction-ydir (ball-direc b)) 
+                   (dir-ydir (ball-direc b)) 
                    (velocity-yvel (ball-vel b))) minor)) RIGHT LEFT)]
     [else (get-ychanged b)]))
 
@@ -459,12 +465,65 @@
 (define (update-wall-list w)
   (cond
     [(empty? w) '()]
-    [else (append (wall-afternexttick (first w)) (update-wall-list (rest w)))]))
+    [else (append (wall-afternexttick (first w) (rest w)) 
+                  (update-wall-list (rest w)))]))
 
-(define (wall-afternexttick w)
+(define (wall-afternexttick w listOfWalls)
   (cond
-    [(active? (wall-state w)) (wall-grow w)]
+    [(active? (wall-state w)) (wall-grow w listOfWalls)]
     [(inactive? (wall-state w)) '()]))
+
+(define (wall-grow w listOfWalls)
+  (cond 
+    [(empty? listOfWalls) (make-wall (grow-wallstpt-unrestricted w)
+                                     (grow-walledpt-unrestricted w)
+                                     (wall-minor w)
+                                     (wall-type w)
+                                     (if (and (border-stptcollided? w) 
+                                              (border-edptcollided? w))
+                                         INACTIVE ACTIVE))] 
+    [else (make-wall (get-wall-startpt w listOfWalls)
+                     (get-wall-endpt w listOfWalls)
+                     (wall-minor w)
+                     (wall-type w)
+                     (if (check-if-inactive? w listOfWalls) 
+                         INACTIVE ACTIVE))]))
+
+(define (get-wall-startpt w listOfWalls)
+  (cond 
+    [(stpt-collided? w listOfWalls) (grow-wallstpt-restricted w)]
+    [else (grow-wallstpt-unrestricted w)]))
+  
+(define (grow-wallstpt-unrestricted w)
+  (cond
+    [(verticle? (wall-type w)) 
+     (if (< (- (wall-startpt w) 8) BALL-Y-TOP-EDGE) 
+         BALL-Y-TOP-EDGE (- (wall-startpt w) 8))]          
+    [(horizontal? (wall-type w)) 
+     (if (< (- (wall-startpt w) 8) BALL-X-LEFT-EDGE) 
+         BALL-X-LEFT-EDGE (- (wall-startpt w) 8))]))
+
+(define (get-wallendpt w listOfWalls)
+  (cond 
+    [(edpt-collided? w listOfWalls) (grow-walledpt-restricted w)]
+    [else (grow-walledpt-unrestricted w)]))
+
+(define (grow-walledpt-unrestricted w)
+  (cond
+    [(verticle? (wall-type w)) 
+     (if (> (+ (wall-endpt w) 8) BALL-Y-DOWN-EDGE) 
+         BALL-Y-DOWN-EDGE (+ (wall-endpt w) 8))]          
+    [(horizontal? (wall-type w)) 
+     (if (> (+ (wall-endpt w) 8) BALL-X-RIGHT-EDGE) 
+         BALL-X-RIGHT-EDGE (+ (wall-endpt w) 8))]))
+
+(define (check-if-inactive? w listOfWalls)
+  (or (and (border-stptcollided? w) (edpt-collided? w listOfWalls)) 
+      (and (stpt-collided? w listOfWalls) (border-edptcollided? w)) 
+      (and (stpt-collided? w listOfWalls) (edpt-collided? w listOfWalls))))
+
+(define (get-goalscore l)
+  (if (l <= 8) (+ 50 (* 5 l)) 90))
 
 (define (key-handler w ke)
   (if (key=? " ") 
@@ -480,6 +539,31 @@
   (cond
     [(verticle? o) HORIZONTAL]
     [(horizontal? o) VERTICLE]))
+
+(define (mouse-handler w x y me)
+  (cond 
+    [(string=? "button down" me) 
+     (make-world (world-balls w) 
+                 (cons (make-wall 
+                        (get-stpt-edpt x y (world-orientation w))
+                        (get-stpt-edpt x y (world-orientation w))
+                        (get-minor x y (world-orientation w)) 
+                        (world-orientation w) ACTIVE) (cons (world-walls w)))
+                 (world-orientation w)
+                 (world-level w)
+                 (world-score w)
+                 (world-goalscore w))]
+    [else w]))
+
+(define (get-stpt-edpt x y o)
+  (cond
+    [(verticle? o) y]
+    [(horizontal? o) x]))
+
+(define (get-minor x y o)
+  (cond
+    [(verticle? o) x]
+    [(horizontal? o) y]))
 
 (define (render w)
   (place-image (draw-score-image w) 
