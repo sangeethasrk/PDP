@@ -1,0 +1,12 @@
+Alternate data definition for editor.rkt
+
+; An editor is a (make-editor String number)
+; INTERP: The editor has its edited string storing the entire text
+; 'position' here is a number and it denotes the number of characters from left where the cursor is currently placed
+(define-struct editor [editedstring position])
+
+Pros: 
+This data definition makes the edite function quite simple
+
+Cons:
+Rendering the editor as image however becomes very difficult as it is tedious to calulate where to render the cursor as an image on the text

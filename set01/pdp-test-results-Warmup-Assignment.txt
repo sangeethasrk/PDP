@@ -1,0 +1,212 @@
+PDP Test Report for Warmup-Assignment
+
+Definitions:
+
+Test Case: 
+  (test-equal? (cube-volume 0) 0 "The cube volumn of side length 0 should be 0")
+Test Result: Failure
+actual : cube-volume-is-undefined
+expected : 0
+expression : (check-equal? (cube-volume 0) 0)
+params : (cube-volume-is-undefined 0)
+
+Test Case: 
+  (test-equal?
+   (cube-volume 3)
+   27
+   "The cube volumn of side length 3 should be 27")
+Test Result: Failure
+actual : cube-volume-is-undefined
+expected : 27
+expression : (check-equal? (cube-volume 3) 27)
+params : (cube-volume-is-undefined 27)
+
+Test Case: 
+  (test-true
+   (let ((c (string-first "DrRacket")))
+     (or (and (char? c) (char=? c #\D)) (string=? c "D")))
+   "The first character of string 'DrRacket' should be 'D'")
+Test Result: Success
+
+Test Case: 
+  (test-true
+   (let ((c (string-last "DrRacket")))
+     (or (and (char? c) (char=? c #\t)) (string=? c "t")))
+   "The last character of string 'DrRacket' should be 't'")
+Test Result: Success
+
+Test Case: 
+  (test-equal? (bool-imply true true) true "True=>True implies True")
+Test Result: Failure
+actual : true
+expected : #t
+expression : (check-equal? (bool-imply true true) true)
+params : (true #t)
+
+Test Case: 
+  (test-equal? (bool-imply true false) false "True=>False implies False")
+Test Result: Error
+cond: all question results were false
+
+Test Case: 
+  (test-equal? (bool-imply false true) true "False=>True implies True")
+Test Result: Failure
+actual : false
+expected : #t
+expression : (check-equal? (bool-imply false true) true)
+params : (false #t)
+
+Test Case: 
+  (test-equal? (bool-imply false false) true "False=>False implies True")
+Test Result: Failure
+actual : false
+expected : #t
+expression : (check-equal? (bool-imply false false) true)
+params : (false #t)
+
+Test Case: 
+  (test-equal?
+   (image-area (rectangle 3 5 "solid" "yellow"))
+   15
+   "a rectangle image with width 3 length 5 should have area 15 ")
+Test Result: Success
+
+Test Case: 
+  (test-equal?
+   (image-area (circle 2 "solid" "yellow"))
+   16
+   "the image of circle with radios 2 should have area 16")
+Test Result: Success
+
+Test Case: 
+  (test-equal?
+   (image-classify (rectangle 3 5 "solid" "yellow"))
+   "tall"
+   "a tall rectangle should return 'tall'")
+Test Result: Success
+
+Test Case: 
+  (test-equal?
+   (image-classify (rectangle 5 3 "solid" "yellow"))
+   "wide"
+   "a wide rectangle should return 'wide")
+Test Result: Success
+
+Test Case: 
+  (test-equal?
+   (image-classify (rectangle 5 5 "solid" "yellow"))
+   "square"
+   "a square rectangle should return 'square'")
+Test Result: Success
+
+Test Case: 
+  (test-equal?
+   (string-join "Hello" "Racket")
+   "Hello_Racket"
+   "case 1: join two non empty strings")
+Test Result: Failure
+actual : Hello-Racket
+expected : Hello_Racket
+expression : (check-equal? (string-join Hello Racket) Hello_Racket)
+params : (Hello-Racket Hello_Racket)
+
+Test Case: 
+  (test-equal?
+   (string-join "Hello" "")
+   "Hello_"
+   "case 2: join a non-empty string with an empty string")
+Test Result: Failure
+actual : Hello-
+expected : Hello_
+expression : (check-equal? (string-join Hello ) Hello_)
+params : (Hello- Hello_)
+
+Test Case: 
+  (test-equal?
+   (string-join "" "Racket")
+   "_Racket"
+   "case 3: join an empty string with a non-empty string")
+Test Result: Failure
+actual : -Racket
+expected : _Racket
+expression : (check-equal? (string-join  Racket) _Racket)
+params : (-Racket _Racket)
+
+Test Case: 
+  (test-equal? (string-join "" "") "_" "case 4: join two empty strings")
+Test Result: Failure
+actual : -
+expected : _
+expression : (check-equal? (string-join  ) _)
+params : (- _)
+
+Test Case: 
+  (test-equal?
+   (string-insert "Racket" 0)
+   "_Racket"
+   "insert to the front of a non-empty string")
+Test Result: Failure
+actual : -Racket
+expected : _Racket
+expression : (check-equal? (string-insert Racket 0) _Racket)
+params : (-Racket _Racket)
+
+Test Case: 
+  (test-equal?
+   (string-insert "Racket" 2)
+   "Ra_cket"
+   "insert to the middle of a non-empty string")
+Test Result: Failure
+actual : Ra-cket
+expected : Ra_cket
+expression : (check-equal? (string-insert Racket 2) Ra_cket)
+params : (Ra-cket Ra_cket)
+
+Test Case: 
+  (test-equal?
+   (string-insert "Racket" 6)
+   "Racket_"
+   "insert to the last of a non-empty string")
+Test Result: Failure
+actual : Racket-
+expected : Racket_
+expression : (check-equal? (string-insert Racket 6) Racket_)
+params : (Racket- Racket_)
+
+Test Case: 
+  (test-equal? (string-insert "" 0) "_" "insert to an empty string")
+Test Result: Failure
+actual : -
+expected : _
+expression : (check-equal? (string-insert  0) _)
+params : (- _)
+
+Test Case: 
+  (test-equal?
+   (string-delete "Racket" 0)
+   "acket"
+   "delete the first position from string")
+Test Result: Success
+
+Test Case: 
+  (test-equal?
+   (string-delete "Racket" 2)
+   "Raket"
+   "delete the middle position from string")
+Test Result: Success
+
+Test Case: 
+  (test-equal?
+   (string-delete "Racket" 5)
+   "Racke"
+   "delete the last position from string")
+Test Result: Success
+
+
+Overall Results:
+  Test Successes: 10
+  Test Failures: 13
+  Test Errors: 1
+
+Raw Score: 10/24
+Normalized Score: 4/10

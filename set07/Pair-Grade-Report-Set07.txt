@@ -1,0 +1,58 @@
+Partner1 Name:
+Partner1 CCS ID: geethsrk
+
+Partner2 Name:
+Partner2 CCS ID: sivaram
+
+
+Grade Report
+
+Design Grading: 
+
+Correctness:           4/10
+Data Design:            6/6
+Function Specification: 3/6
+Implementation:         6/6
+Style:                  4/6
+
+Deductions:
+
+Style:
+cond to be used only when decomposing lists/itemisation/mixed data
+
+Data Design:
+The template writing was good and captured mutual recursion as well as the mirrored the
+data definition correctly
+Spec/Implementation:
+expr->strings has the wrong strategy. It is not function composition. Its decomp on expr:Expr
+
+
+
+Codewalk Grading:
+
+
+Partner1:
+
+Q&A:                      09/10
+Presentation:              6/6
+
+Deductions:
+Notes:
+
+
+
+Partner2:
+
+Q&A:                      08/10
+Presentation:              6/6
+
+Deductions:
+Notes:
+
+
+
+
+Overall Score for Partner 1: 38/50
+Overall Score for Partner 2: 37/50
+
+Other Notes:

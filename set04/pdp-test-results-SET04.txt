@@ -1,0 +1,392 @@
+PDP Test Report for SET04
+
+
+Test Name: words-tests
+Definitions:
+	(define (explode s) (map string (string->list s)))
+	(define (implode lo1s) (if (empty? lo1s) "" (foldr string-append "" lo1s)))
+	(define (implode-each words)
+	  (cond
+	   ((empty? words) '())
+	   (else (cons (implode (first words)) (implode-each (rest words))))))
+
+Test Case: 
+  (test-equal? "An empty Word has one arrangement" (arrangements '()) '(()))
+Test Result: Failure
+actual : ()
+expected : (())
+expression : (check-equal? (arrangements (quote ())) (quote (())))
+params : (() (()))
+
+Test Case: 
+  (test-equal?
+   "A Word of length two has only two rearrangements: itself and its reverse"
+   (apply set (arrangements '("a" "b")))
+   (apply set '(("a" "b") ("b" "a"))))
+Test Result: Failure
+actual : #<set: () (a b) (b a)>
+expected : #<set: (a b) (b a)>
+expression : (check-equal? (apply set (arrangements (quote (a b)))) (apply set (quote ((a b) (b a)))))
+params : (#<set: () (a b) (b a)> #<set: (a b) (b a)>)
+
+Test Case: 
+  (test-equal?
+   "The 'der' example from exercise 177"
+   (apply set (insert-everywhere/in-all-words "d" '(("e" "r") ("r" "e"))))
+   (apply
+    set
+    '(("d" "e" "r")
+      ("e" "d" "r")
+      ("e" "r" "d")
+      ("d" "r" "e")
+      ("r" "d" "e")
+      ("r" "e" "d"))))
+Test Result: Failure
+actual : #<set: () (d (r e)) (e d r) (e r d) (d e r) ((r e) d)>
+expected : #<set: (e d r) (e r d) (d e r) (d r e) (r e d) (r d e)>
+expression : (check-equal? (apply set (insert-everywhere/in-all-words d (quote ((e r) (r e))))) (apply set (quote ((d e r) (e d r) (e r d) (d r e) (r d e) (r e d)))))
+params : (#<set: () (d (r e)) (e d r) (e r d) (d e r) ((r e) d)> #<set: (e d r) (e r d) (d e r) (d r e) (r e d) (r d e)>)
+
+Test Case: 
+  (test-equal?
+   "The example from the beginning of section 13.1"
+   (apply set (arrangements '("a" "d" "e" "r")))
+   (apply
+    set
+    '(("a" "d" "e" "r")
+      ("d" "a" "e" "r")
+      ("d" "e" "a" "r")
+      ("d" "e" "r" "a")
+      ("a" "e" "d" "r")
+      ("e" "a" "d" "r")
+      ("e" "d" "a" "r")
+      ("e" "d" "r" "a")
+      ("a" "e" "r" "d")
+      ("e" "a" "r" "d")
+      ("e" "r" "a" "d")
+      ("e" "r" "d" "a")
+      ("a" "d" "r" "e")
+      ("d" "a" "r" "e")
+      ("d" "r" "a" "e")
+      ("d" "r" "e" "a")
+      ("a" "r" "d" "e")
+      ("r" "a" "d" "e")
+      ("r" "d" "a" "e")
+      ("r" "d" "e" "a")
+      ("a" "r" "e" "d")
+      ("r" "a" "e" "d")
+      ("r" "e" "a" "d")
+      ("r" "e" "d" "a"))))
+Test Result: Failure
+actual : #<set: () (a d (r e)) (d a (r e)) (d a r d e a r) (d (r e) a) (a e r d) (a e d r) (a d e r) (e r d a) (e d r a) (e a d e r a d) (((r e) d) a) (d e r a) (e a r e d a r) (a ((r e) d))>
+expected : #<set: (a e r d) (a e d r) (a r d e) (a r e d) (a d e r) (a d r e) (r d a e) (r d e a) (r a e d) (r a d e) (r e d a) (r e a d) (e r d a) (e r a d) (e d a r) (e d r a) (e a d r) (e a r d) (d r e a) (d r a e) (d a e r) (d a r e) (d e r a) (d e a r)>
+expression : (check-equal? (apply set (arrangements (quote (a d e r)))) (apply set (quote ((a d e r) (d a e r) (d e a r) (d e r a) (a e d r) (e a d r) (e d a r) (e d r a) (a e r d) (e a r d) (e r a d) (e r d a) (a d r e) (d a r e) (d r a e) (d r e a) (a r d e) (r a d e) (r d a e) (r d e a) (a r e d) (r a e d) (r e a d) (r e d a)))))
+params : (#<set: () (a d (r e)) (d a (r e)) (d a r d e a r) (d (r e) a) (a e r d) (a e d r) (a d e r) (e r d a) (e d r a) (e a d e r a d) (((r e) d) a) (d e r a) (e a r e d a r) (a ((r e) d))> #<set: (a e r d) (a e d r) (a r d e) (a r e d) (a d e r) (a d r e) (r d a e) (r d e a) (r a e d) (r a d e) (r e d a) (r e a d) (e r d a) (e r a d) (e d a r) (e d r a) (e a d r) (e a r d) (d r e a) (d r a e) (d a e r) (d a r e) (d e r a) (d e a r)>)
+
+Test Case: 
+  (test-equal?
+   "arrangement-main should, after imploding, do the same thing as arrangements"
+   (apply set (arrangement-main "ader"))
+   (apply set (implode-each (arrangements (explode "ader")))))
+Test Result: Error
+pdp-require: arrangement-main not provided
+
+Test Case: 
+  (test-equal?
+   "an empty string only has one arrangement"
+   (arrangement-main "")
+   '(""))
+Test Result: Error
+pdp-require: arrangement-main not provided
+
+
+Results for Suite words-tests:
+  Test Successes: 0
+  Test Failures: 4
+  Test Errors: 2
+
+Raw Score: 0/6
+Normalized Score: 0/10
+
+
+Test Name: editor-tests
+Definitions:
+	(define LEFT "left")
+	(define RIGHT "right")
+	(define BACKSPACE "\b")
+	(define RETURN "\r")
+	(define TAB "\t")
+	(define TEXT-SIZE 16)
+	(define NEU (edit (string->editor "EU") "N"))
+	(define (editor-pre-post-check? result expected)
+	  (or (and (list? result) (equal? result expected))
+	      (and (list? result) (equal? (reverse result) expected))
+	      (and (string? result) (string=? result (implode expected)))
+	      (and (string? result) (string=? result (implode (reverse expected))))))
+
+Test Case: 
+  (test-true
+   "Performing multiple operations. \nGoing right twice, causes editor-pre to be (list \"1\" \"2\")\nand editor-post to be (list \"3\" \"4\").\nAfter processing backspace, editor-pre will be (list \"1\")\nand editor-post will be (list \"3\" \"4\").\nProcessing left, editor-pre will be empty and\neditor-post will be (list \"1\" \"3\" \"4\").\nBackspace and left should have no effect on editor-pre and post"
+   (editor-pre-post-check?
+    (editor-post
+     (edit
+      (edit
+       (edit
+        (edit (edit (edit (string->editor "1234") RIGHT) RIGHT) BACKSPACE)
+        LEFT)
+       BACKSPACE)
+      LEFT))
+    (list "1" "3" "4")))
+Test Result: Success
+
+Test Case: 
+  (test-true
+   "Performing multiple operation.\nRight should not have any effect as editor-post is empty.\nLeft will make editor-pre empty and editor-post will be (list \"a\").\nTAB will be ignored.\nKeyEvent 'b' will result in editor-pre to be (list \"b\")\nand editor-post as (list \"a\").\nKeyEvent 'c' will result in editor-pre to be (list \"b\" \"c\") and \neditor-post to be (list \"a\")"
+   (editor-pre-post-check?
+    (editor-post
+     (edit
+      (edit
+       (edit
+        (edit
+         (edit (edit (edit (edit (string->editor "") "a") RIGHT) RIGHT) LEFT)
+         TAB)
+        "b")
+       "up")
+      "c"))
+    (list "a")))
+Test Result: Error
+implode: expected a list of 1-letter strings, but received '("b" "up" "a")
+
+Test Case: 
+  (test-equal?
+   "After processing KeyEvent '1' , '2' and '@', editor-post will be 3\n as editor-pre is (list '1' '2' '@')"
+   (editor-pos (edit (edit (edit (string->editor "test") "1") "2") "@"))
+   3)
+Test Result: Success
+
+Test Case: 
+  (test-true
+   "KeyEvent 's' causes string in the editor to go beyond canvas,\n hence it should be ignored."
+   (editor-pre-post-check?
+    (editor-pre
+     (edit (string->editor "llllllsslllllzleeeaaillllsssllllllllllllllll") "s"))
+    empty))
+Test Result: Success
+
+Test Case: 
+  (test-true
+   "Pressing backspace should delete the space. Resultant string should be \nEU"
+   (editor-pre-post-check? (editor-post (edit NEU BACKSPACE)) (list "E" "U")))
+Test Result: Success
+
+Test Case: 
+  (test-equal?
+   "Pressing right key shifts the cursor in between E and U"
+   (editor-pos (edit NEU RIGHT))
+   2)
+Test Result: Success
+
+Test Case: 
+  (test-equal?
+   "Pressing left key shifts the cursor at the begining of the editor"
+   (editor-pos (edit NEU LEFT))
+   0)
+Test Result: Success
+
+Test Case: 
+  (test-true
+   "Pressing \r should not affect the state of the editor"
+   (editor-pre-post-check? (editor-pre (edit NEU RETURN)) (list "N")))
+Test Result: Failure
+expression : (check-true (editor-pre-post-check? (editor-pre (edit NEU RETURN)) (list N)))
+params : (#f)
+
+Test Case: 
+  (test-true
+   "Pressing f1 key should not affect the state of the editor"
+   (editor-pre-post-check? (editor-post (edit NEU "f1")) (list "E" "U")))
+Test Result: Error
+implode: expected a list of 1-letter strings, but received '("N" "f1" "E" "U")
+
+Test Case: 
+  (test-true
+   "Pressing spacebar appends space to editor-pre"
+   (editor-pre-post-check?
+    (editor-pre (edit (edit (edit NEU RIGHT) RIGHT) " "))
+    (reverse (list "N" "E" "U" " "))))
+Test Result: Success
+
+Test Case: 
+  (test-true
+   "Pressing left and *, will result in editor-pre as * and editor-post as NEU"
+   (editor-pre-post-check? (editor-pre (edit (edit NEU LEFT) "*")) (list "*")))
+Test Result: Success
+
+
+Results for Suite editor-tests:
+  Test Successes: 8
+  Test Failures: 1
+  Test Errors: 2
+
+Raw Score: 8/11
+Normalized Score: 7/10
+
+
+Test Name: worms-tests
+Definitions:
+	(define CANVAS-WIDTH 300)
+	(define CANVAS-HEIGHT 300)
+	(define HALF-CANVAS-WIDTH (/ CANVAS-WIDTH 2))
+	(define HALF-CANVAS-HEIGHT (/ CANVAS-HEIGHT 2))
+	(define CANVAS-ORIGIN 0)
+	(define UP "up")
+	(define DOWN "down")
+	(define LEFT "left")
+	(define RIGHT "right")
+
+Test Case: 
+  (test-equal?
+   "Y coordinate of head of worm is incorrect"
+   (worm-head-y (world-worm (next-world INITIAL-WORLD)))
+   15)
+Test Result: Error
+Worm-psn: contract violation
+  expected: Worm?
+  given: (World (Worm (list (posn 5 15)) "down") (posn 20 20))
+
+Test Case: 
+  (test-equal?
+   "x coordinate of head of worm is incorrect"
+   (worm-head-x (world-worm (next-world INITIAL-WORLD)))
+   5)
+Test Result: Error
+Worm-psn: contract violation
+  expected: Worm?
+  given: (World (Worm (list (posn 5 15)) "down") (posn 20 20))
+
+Test Case: 
+  (test-equal?
+   "x coordinate of head of worm is incorrect"
+   (worm-head-x (world-worm (next-world (key-handler INITIAL-WORLD RIGHT))))
+   15)
+Test Result: Error
+Worm-psn: contract violation
+  expected: Worm?
+  given: (World (Worm (list (posn 15 5)) "right") (posn 20 20))
+
+Test Case: 
+  (test-equal?
+   "worm length should be two as it will inject food on next tick"
+   (worm-length
+    (world-worm (next-world (replace-food INITIAL-WORLD (make-posn 5 15)))))
+   2)
+Test Result: Error
+pdp-require: replace-food not provided
+
+Test Case: 
+  (test-equal?
+   "worm should inject food"
+   (worm-length
+    (world-worm
+     (next-world
+      (replace-food
+       (replace-worm
+        INITIAL-WORLD
+        (create-worm (list (make-posn 245 205) (make-posn 245 195))))
+       (make-posn 245 215)))))
+   3)
+Test Result: Error
+pdp-require: replace-worm not provided
+
+Test Case: 
+  (test-equal?
+   "worm should not inject food"
+   (worm-length
+    (world-worm
+     (next-world
+      (replace-food
+       (replace-worm
+        INITIAL-WORLD
+        (create-worm (list (make-posn 245 205) (make-posn 245 195))))
+       (make-posn 205 215)))))
+   2)
+Test Result: Error
+pdp-require: replace-worm not provided
+
+Test Case: 
+  (test-equal?
+   "worm is able to turn at wall"
+   (worm-head-y
+    (world-worm
+     (next-world
+      (key-handler
+       (next-world
+        (key-handler
+         (replace-worm
+          INITIAL-WORLD
+          (create-worm (list (make-posn 15 15) (make-posn 15 5))))
+         LEFT))
+       DOWN))))
+   25)
+Test Result: Error
+pdp-require: replace-worm not provided
+
+Test Case: 
+  (test-equal?
+   "worm collides the wall so game should end"
+   (end?
+    (next-world
+     (next-world
+      (key-handler
+       (replace-worm
+        INITIAL-WORLD
+        (create-worm (list (make-posn 15 15) (make-posn 15 5))))
+       LEFT))))
+   true)
+Test Result: Error
+pdp-require: replace-worm not provided
+
+Test Case: 
+  (test-equal?
+   "worm ran into itself"
+   (end?
+    (next-world
+     (key-handler
+      (next-world
+       (key-handler
+        (next-world
+         (key-handler
+          (replace-worm
+           INITIAL-WORLD
+           (create-worm
+            (list
+             (make-posn 15 205)
+             (make-posn 15 195)
+             (make-posn 15 185)
+             (make-posn 15 175)
+             (make-posn 15 165))))
+          LEFT))
+        LEFT))
+      LEFT)))
+   true)
+Test Result: Error
+pdp-require: replace-worm not provided
+
+
+Results for Suite worms-tests:
+  Test Successes: 0
+  Test Failures: 0
+  Test Errors: 9
+
+Raw Score: 0/9
+Normalized Score: 0/10
+
+
+Overall Results:
+  Test Successes: 8
+  Test Failures: 5
+  Test Errors: 13
+
+Raw Score: 8/26
+Normalized Score: 2/10
+

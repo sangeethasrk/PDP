@@ -1,0 +1,533 @@
+PDP Test Report for SET08
+
+
+Test Name: chat-tests
+Definitions:
+	(define (sequence-keys w str)
+	  (let loop ((w w) (keys (explode str)))
+	    (cond
+	     ((empty? keys) w)
+	     (else (loop (key-handler w (first keys)) (rest keys))))))
+	(define (left w (n 1))
+	  (let loop ((w w) (n n))
+	    (if (= n 0) w (loop (key-handler w "left") (sub1 n)))))
+	(define (right w (n 1))
+	  (let loop ((w w) (n n))
+	    (if (= n 0) w (loop (key-handler w "right") (sub1 n)))))
+	(define (back w (n 1))
+	  (let loop ((w w) (n n)) (if (= n 0) w (loop (key-handler w "\b") (sub1 n)))))
+	(define (tab w) (key-handler w "\t"))
+	(define (enter w) (key-handler w "\r"))
+	(define (get-string w)
+	  (string-append
+	   (get-editor-pre (get-editor w))
+	   (get-editor-post (get-editor w))))
+	(define (history=? lst1 lst2)
+	  (or (equal? lst1 lst2) (equal? lst1 (reverse lst2))))
+	(define thread-world-NOTE
+	  "thread-world represents a chain of function calls where the result of the ith function is the first argument to the (i+1)th function")
+	(define thread-world-EXAMPLE
+	  "(thread-world \"Steve\" mk-world get-editor get-editor-pre)")
+	(define thread-world-EXAMPLE-RESULT
+	  "=> (get-editor-pre (get-editor (mk-world \"Steve\")))")
+
+Test Case: 
+  (test-equal?
+   "Nothing in editor-pre in an initial-wolrd"
+   (thread-world "Dan" mk-world get-editor get-editor-pre)
+   "")
+Test Result: Success
+
+Test Case: 
+  (test-equal?
+   "Nothing in editor-post in an initial-wolrd"
+   (thread-world "Dan" mk-world get-editor get-editor-post)
+   "")
+Test Result: Success
+
+Test Case: 
+  (test-equal?
+   "A sequence of keys inserts all the keys"
+   (thread-world
+    "Dan"
+    mk-world
+    (sequence-keys "testing")
+    get-editor
+    get-editor-pre)
+   "testing")
+Test Result: Success
+
+Test Case: 
+  (test-equal?
+   "Editor post is still empty after a sequence of keys"
+   (thread-world
+    "Dan"
+    mk-world
+    (sequence-keys "testing")
+    get-editor
+    get-editor-post)
+   "")
+Test Result: Success
+
+Test Case: 
+  (test-equal?
+   "moving cursor at the right to the right does nothing"
+   (thread-world
+    "Dan"
+    mk-world
+    (sequence-keys "testing")
+    (right 1)
+    get-editor
+    get-editor-post)
+   (thread-world
+    "Dan"
+    mk-world
+    (sequence-keys "testing")
+    get-editor
+    get-editor-post))
+Test Result: Success
+
+Test Case: 
+  (test-equal?
+   "backspace deletes characters"
+   (thread-world
+    "Dan"
+    mk-world
+    (sequence-keys "testing")
+    (back 3)
+    get-editor
+    get-editor-pre)
+   "test")
+Test Result: Success
+
+Test Case: 
+  (test-equal?
+   "Moving left actually moves the cursor"
+   (thread-world
+    "Dan"
+    mk-world
+    (sequence-keys "testing")
+    (left 3)
+    get-editor
+    get-editor-pre)
+   "test")
+Test Result: Success
+
+Test Case: 
+  (test-equal?
+   "Moving left inserts into editor post"
+   (thread-world
+    "Dan"
+    mk-world
+    (sequence-keys "testing")
+    (left 3)
+    get-editor
+    get-editor-post)
+   "ing")
+Test Result: Success
+
+Test Case: 
+  (test-equal?
+   "inserting a character then deleting it doesn't change editor contents"
+   (thread-world
+    (mk-world "Dan")
+    (sequence-keys "test")
+    (key-handler "x")
+    back
+    get-string)
+   (thread-world (mk-world "Dan") (sequence-keys "test") get-string))
+Test Result: Success
+
+Test Case: 
+  (test-check
+   "receive userlist msg"
+   set=?
+   (thread-world
+    (mk-world "A")
+    (receive (userlist (list "A" "B" "C")))
+    get-users)
+   (list "A" "B" "C"))
+Test Result: Success
+
+Test Case: 
+  (test-check
+   "receive unsorted userlist msg"
+   set=?
+   (thread-world
+    (mk-world "A")
+    (receive (userlist (list "B" "A" "C")))
+    get-users)
+   (list "A" "B" "C"))
+Test Result: Success
+
+Test Case: 
+  (test-equal?
+   "Update the user-list correctly"
+   (thread-world
+    (mk-world "A")
+    (receive (userlist (list "A" "B" "D")))
+    (receive (join "C"))
+    get-users)
+   (list "A" "B" "C" "D"))
+Test Result: Success
+
+Test Case: 
+  (test-equal?
+   "Update the user-list correctly join and leave"
+   (thread-world
+    (mk-world "A")
+    (receive (userlist (list "A" "B" "C")))
+    (receive (join "D"))
+    (receive (join "E"))
+    (receive (leave "B"))
+    (receive (leave "D"))
+    get-users)
+   (list "A" "C" "E"))
+Test Result: Success
+
+Test Case: 
+  (test-equal?
+   "No history on just joining the world"
+   (thread-world (mk-world "A") get-chat-history)
+   '())
+Test Result: Success
+
+Test Case: 
+  (test-true
+   "History (accept with or without period)"
+   (let ((hist
+          (thread-world
+           (mk-world "A")
+           (receive (userlist (list "A" "B" "C")))
+           (receive (join "D"))
+           (receive (join "E"))
+           (receive (leave "B"))
+           (receive (leave "D"))
+           get-chat-history)))
+     (or (history=?
+          hist
+          (list "D joined" "E joined" "B left the chat" "D left the chat"))
+         (history=?
+          hist
+          (list
+           "D joined."
+           "E joined."
+           "B left the chat."
+           "D left the chat.")))))
+Test Result: Failure
+expression : (check-true (let ((hist (thread-world (mk-world A) (receive (userlist (list A B C))) (receive (join D)) (receive (join E)) (receive (leave B)) (receive (leave D)) get-chat-history))) (or (history=? hist (list D joined E joined B left the chat D left the chat)) (history=? hist (list D joined. E joined. B left the chat. D left the chat.)))))
+params : (#f)
+
+Test Case: 
+  (test-equal?
+   "Tab completion"
+   (thread-world
+    (mk-world "Me")
+    (receive (userlist (list "Dan" "Me" "Steve")))
+    (key-handler "D")
+    tab
+    get-editor
+    get-editor-pre)
+   "Dan")
+Test Result: Success
+
+Test Case: 
+  (test-check
+   "receiving a message"
+   history=?
+   (thread-world
+    (mk-world "Dan")
+    (receive (userlist (list "Ashutosh" "Brian" "Dan" "Prasad" "Steve")))
+    (receive (broadcast "Brian" "Hello"))
+    (receive (broadcast "Steve" "testing"))
+    get-chat-history)
+   (list "< Brian > Hello" "< Steve > testing"))
+Test Result: Success
+
+Test Case: 
+  (test-check
+   "sending a message: add event"
+   history=?
+   (thread-world
+    (mk-world "Dan")
+    (receive (userlist (list "Ashutosh" "Brian" "Dan" "Prasad" "Steve")))
+    (receive (broadcast "Brian" "Hello"))
+    (receive (broadcast "Steve" "testing"))
+    (sequence-keys "hi")
+    enter
+    package-world
+    get-chat-history)
+   (list "< Brian > Hello" "< Steve > testing" "< Dan > hi"))
+Test Result: Success
+
+Test Case: 
+  (test-equal?
+   "sending a message: MsgToServer"
+   (thread-world
+    (mk-world "Dan")
+    (receive (userlist (list "Ashutosh" "Brian" "Dan" "Prasad" "Steve")))
+    (receive (broadcast "Brian" "Hello"))
+    (receive (broadcast "Steve" "testing"))
+    (sequence-keys "hi")
+    enter
+    package-message)
+   '(broadcast "hi"))
+Test Result: Success
+
+Test Case: 
+  (test-true
+   "sending a private message (accept with out without extra space betw colon)"
+   (let ((hist
+          (thread-world
+           (mk-world "Dan")
+           (receive (userlist (list "Ashutosh" "Brian" "Dan" "Prasad" "Steve")))
+           (receive (broadcast "Brian" "Hello"))
+           (receive (broadcast "Steve" "testing"))
+           (sequence-keys "Prasad: hi")
+           enter
+           package-world
+           get-chat-history)))
+     (or (history=?
+          hist
+          (list "< Brian > Hello" "< Steve > testing" "< Dan->Prasad >  hi"))
+         (history=?
+          hist
+          (list "< Brian > Hello" "< Steve > testing" "< Dan->Prasad > hi")))))
+Test Result: Success
+
+Test Case: 
+  (test-true
+   "sending a private message: MsgToServer (modulo space)"
+   (let ((msg
+          (thread-world
+           (mk-world "Dan")
+           (receive (userlist (list "Ashutosh" "Brian" "Dan" "Prasad" "Steve")))
+           (receive (broadcast "Brian" "Hello"))
+           (receive (broadcast "Steve" "testing"))
+           (sequence-keys "Prasad: hi")
+           enter
+           package-message)))
+     (or (equal? msg '(private "Prasad" "hi"))
+         (equal? msg '(private "Prasad" " hi")))))
+Test Result: Success
+
+Test Case: 
+  (test-check
+   "receiving a private message"
+   history=?
+   (thread-world
+    (mk-world "Dan")
+    (receive (userlist (list "Ashutosh" "Brian" "Dan" "Prasad" "Steve")))
+    (receive (broadcast "Brian" "Hello"))
+    (receive (broadcast "Steve" "testing"))
+    (sequence-keys "I'm sending a message")
+    enter
+    package-world
+    (receive (private "Ashutosh" "a private message"))
+    get-chat-history)
+   (list
+    "< Brian > Hello"
+    "< Steve > testing"
+    "< Dan > I'm sending a message"
+    "< Ashutosh > a private message"))
+Test Result: Success
+
+Test Case: 
+  (test-true
+   "sending a self private message (accept with out without extra space betw colon)"
+   (let ((hist
+          (thread-world
+           (mk-world "Dan")
+           (receive (userlist (list "Ashutosh" "Brian" "Dan" "Prasad" "Steve")))
+           (receive (broadcast "Brian" "Hello"))
+           (receive (broadcast "Steve" "testing"))
+           (sequence-keys "Dan: hi")
+           enter
+           package-world
+           get-chat-history)))
+     (or (history=?
+          hist
+          (list "< Brian > Hello" "< Steve > testing" "< Dan->Dan >  hi"))
+         (history=?
+          hist
+          (list "< Brian > Hello" "< Steve > testing" "< Dan->Dan > hi")))))
+Test Result: Success
+
+Test Case: 
+  (test-true
+   "sending a self private message: MsgToServer (modulo space)"
+   (let ((msg
+          (thread-world
+           (mk-world "Dan")
+           (receive (userlist (list "Ashutosh" "Brian" "Dan" "Prasad" "Steve")))
+           (receive (broadcast "Brian" "Hello"))
+           (receive (broadcast "Steve" "testing"))
+           (sequence-keys "Dan: hi")
+           enter
+           package-message)))
+     (or (equal? msg '(private "Dan" "hi"))
+         (equal? msg '(private "Dan" " hi")))))
+Test Result: Success
+
+Test Case: 
+  (test-check
+   "receiving a self private message"
+   history=?
+   (thread-world
+    (mk-world "Dan")
+    (receive (userlist (list "Ashutosh" "Brian" "Dan" "Prasad" "Steve")))
+    (receive (broadcast "Brian" "Hello"))
+    (receive (broadcast "Steve" "testing"))
+    (sequence-keys "I'm sending a message")
+    enter
+    package-world
+    (receive (private "Dan" "a private message"))
+    get-chat-history)
+   (list
+    "< Brian > Hello"
+    "< Steve > testing"
+    "< Dan > I'm sending a message"
+    "< Dan > a private message"))
+Test Result: Success
+
+Test Case: 
+  (test-true
+   "non-existent user (modulo extra space)"
+   (let ((hist
+          (thread-world
+           (mk-world "Dan")
+           (receive (userlist (list "Dan" "Steve")))
+           (sequence-keys "stephen: hello")
+           enter
+           package-world
+           (receive (error "non-existent user: stephen"))
+           get-chat-history)))
+     (or (history=?
+          hist
+          (list "< Dan->stephen >  hello" "non-existent user: stephen"))
+         (history=?
+          hist
+          (list "< Dan->stephen > hello" "non-existent user: stephen")))))
+Test Result: Success
+
+Test Case: 
+  (test-check
+   "invalid user name"
+   history=?
+   (thread-world
+    (mk-world "Rutaaaaaaaaaa")
+    (receive (error "invalid username"))
+    get-chat-history)
+   (list "invalid username"))
+Test Result: Success
+
+Test Case: 
+  (test-check
+   "invalid user name"
+   history=?
+   (thread-world
+    (mk-world "Ruta")
+    (receive (userlist (list "Ruta" "Steve")))
+    (receive (error "improperly formatted message"))
+    get-chat-history)
+   (list "improperly formatted message"))
+Test Result: Success
+
+Test Case: 
+  (test-equal?
+   "tab completion is case sensitive"
+   (thread-world
+    (mk-world "Dan")
+    (receive (userlist (list "Dan" "Steve")))
+    (sequence-keys "ste")
+    tab
+    get-editor
+    get-editor-pre)
+   (thread-world
+    (mk-world "Dan")
+    (receive (userlist (list "Dan" "Steve")))
+    (sequence-keys "ste")
+    get-editor
+    get-editor-pre))
+Test Result: Success
+
+Test Case: 
+  (test-check
+   "truncate chat history"
+   history=?
+   (thread-world
+    (mk-world "Kovit")
+    (receive (userlist (list "Kovit" "Rahul")))
+    (receive (broadcast "Rahul" "1"))
+    (receive (broadcast "Rahul" "2"))
+    (receive (broadcast "Rahul" "3"))
+    (receive (broadcast "Rahul" "4"))
+    (receive (broadcast "Rahul" "5"))
+    (receive (broadcast "Rahul" "6"))
+    (receive (broadcast "Rahul" "7"))
+    (receive (broadcast "Rahul" "8"))
+    (receive (broadcast "Rahul" "9"))
+    (receive (broadcast "Rahul" "10"))
+    (receive (broadcast "Rahul" "11"))
+    (receive (broadcast "Rahul" "12"))
+    (receive (broadcast "Rahul" "13"))
+    (receive (broadcast "Rahul" "14"))
+    (receive (broadcast "Rahul" "15"))
+    (receive (broadcast "Rahul" "16"))
+    (receive (broadcast "Rahul" "17"))
+    (receive (broadcast "Rahul" "18"))
+    (receive (broadcast "Rahul" "19"))
+    (receive (broadcast "Rahul" "20"))
+    (receive (broadcast "Rahul" "21"))
+    (receive (broadcast "Rahul" "22"))
+    (receive (broadcast "Rahul" "23"))
+    (receive (broadcast "Rahul" "24"))
+    (receive (broadcast "Rahul" "25"))
+    (receive (broadcast "Rahul" "26"))
+    get-chat-history)
+   (list
+    "< Rahul > 2"
+    "< Rahul > 3"
+    "< Rahul > 4"
+    "< Rahul > 5"
+    "< Rahul > 6"
+    "< Rahul > 7"
+    "< Rahul > 8"
+    "< Rahul > 9"
+    "< Rahul > 10"
+    "< Rahul > 11"
+    "< Rahul > 12"
+    "< Rahul > 13"
+    "< Rahul > 14"
+    "< Rahul > 15"
+    "< Rahul > 16"
+    "< Rahul > 17"
+    "< Rahul > 18"
+    "< Rahul > 19"
+    "< Rahul > 20"
+    "< Rahul > 21"
+    "< Rahul > 22"
+    "< Rahul > 23"
+    "< Rahul > 24"
+    "< Rahul > 25"
+    "< Rahul > 26"))
+Test Result: Success
+
+
+Results for Suite chat-tests:
+  Test Successes: 29
+  Test Failures: 1
+  Test Errors: 0
+
+Raw Score: 29/30
+Normalized Score: 10/10
+
+
+Overall Results:
+  Test Successes: 29
+  Test Failures: 1
+  Test Errors: 0
+
+Raw Score: 29/30
+Normalized Score: 10/10
+

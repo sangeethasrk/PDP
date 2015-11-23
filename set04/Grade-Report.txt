@@ -1,0 +1,62 @@
+Student Name: Sangeetha Sivaramakrishnan
+CCS ID: geethsrk
+Husky ID: sivaramakrishnan.s
+Grader: Stephen Chang
+
+Grade Report
+
+Correctness:           2/10
+
+Data Design:            2/5
+Function Specification: 3/5
+Implementation:         2/5
+Style:                  5/5
+
+Data Design Alternatives:  1/5
+
+Notes:
+Gameplay: worm doesnt eat food
+
+Data Design:
+- missing template: ListOfPosn, Direction
+- missing data examples: Worm
+- user lowercase for struct names, CamelCase for data def names
+- why define "A Food is a Posn", but then use Posn in World data def?
+- Can a worm have no segments? May want to use non-empty list of Posns for Worm
+
+Function Spec:
+- change-head-position is decomposing ListOfPosn, not Worm
+
+Implementation:
+- extract-new-worminfo double decomposes Worm and ListOfPosn
+  - process one kind of data per function
+  - maybe write a separate function to process worm segments?
+    eg, (extract-new-wormsegments (worm-psn wrm) (worm-dir wrm))
+- extract-newPosn-info double decomposes direction and posn
+  - why do you need else? there are only 4 directions
+Instead:
+(define (extract-newPosninfo p d)
+  (cond
+   [(right? d) (move-posn-right p)]
+   [(up? d) (move-posn-up p)]
+   ...))
+- failed-game-rules double decomposes Worm and ListOfPosn
+Instead:
+;; Strategy: data decomposition on wrm : Worm
+(define (failed-game-rules? wrm)
+  (or (hit-wall? (wrm-psn wrm) (wrm-dir wrm))
+      (hit-self? (wrm-psn wrm))))
+;; Strategy: data decomposition on ListOfPosn
+(define (hit-wall? ps dir) ...)
+;; Strategy: data decomposition on ListOfPosn
+(define (hit-self? ps dir) ...)
+
+Style:
+
+Alt Data Def:
+- need to point to concrete code examples that would be affected
+- not enough to say "simplified"
+
+Overall Score: 15/35
+
+Other Notes:

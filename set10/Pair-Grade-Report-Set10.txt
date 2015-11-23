@@ -1,0 +1,76 @@
+Partner1 Name: Sangeetha Sivaramakrishnan
+Partner1 CCS ID: geethsrk
+
+Partner2 Name: Anitha Subbarayigowda
+Partner2 CCS ID: an1tha
+
+Codewalk: 3:25pm Tues 145 Ryder
+
+Grader1: Stephen Chang
+Grader2: Jai Asher
+
+
+Grade Report
+
+Design Grading:
+
+Correctness:           9/10
+Data Design:            6/6
+Function Specification: 6/6
+Implementation:         5/6
+Style:                  6/6
+
+Deductions:
+
+Design Total:         32/34
+
+Notes:
+
+Implementation:
+- sched-avail and sched-unavail.rkt still have some code duplication
+  - could move more code into sched-general.rkt
+  - could probably eliminate schedule-ok? arg from schedule/general
+
+
+Codewalk Grading:
+
+Partner1: geethsrk
+
+Q&A:                      9/10
+Presentation:              6/6
+
+Deductions:
+Notes:
+
+Q: explain schedule/general, where is recursion?
+A: ans ok
+Q: schedule/general/0 extraneous code?
+A: answered but required assistance
+Q: where is backtracking?
+A: ans ok
+
+Partner 1 Codewalk Total  15/16
+
+
+Partner2: an1tha
+
+Q&A:                      10/10
+Presentation:              6/6
+
+Deductions:
+Notes:
+
+Q: why do you need to pass in schedule/avail-ok?
+A: ans ok - indirectly answered
+Q: do you need to sub1 position
+A: ans ok
+
+Partner 2 Codewalk Total: 16/16
+
+
+
+Overall Score for Partner 1: 49/50
+Overall Score for Partner 2: 50/50
+
+Other Notes:
+beat the reference solution avg-choice: +2
