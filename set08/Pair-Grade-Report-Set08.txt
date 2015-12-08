@@ -1,0 +1,72 @@
+Partner1 Name:
+Partner1 CCS ID: geethsrk
+
+Partner2 Name:
+Partner2 CCS ID: sivaram
+
+
+Grade Report
+
+Design Grading:
+
+Correctness:           10/10
+Data Design:            4/6
+Function Specification: 6/6
+Implementation:         5/6
+Style:                  4/6
+
+Deductions:
+
+	Data Design:-
+		In Case of Mixed Data instead of writing "list-broadcast-fn" decompose the sub - parts 
+		   (i.e the template should reflect the data definition)
+		Where are the list-broadcast-fn, list-error-fn ... defintions
+		Interpretation missing for MsgToLog.
+		Template signatures missing
+		Invariants missing in Editor Data defn
+	Function Implementation:-
+		Don't dump the test suite in example.
+		Write proper functions statements
+	Implentation:-
+		use of cond in update-cursor is incorrect
+		(reverse (rest (reverse lst))) -> There is a better way to write this
+	Style:
+		Test Coverage Missing:- (-2)		
+Design Total:         29/34
+
+Notes:
+	
+
+Codewalk Grading:
+
+Partner1:
+
+Q&A:                       8/10
+Presentation:              6/6
+
+Deductions:
+Notes:
+	Design Recipe starts with Data Definition 
+	Couldn't identify mistake in MsgFromServer
+
+Partner 1 Codewalk Total  14/16
+
+
+Partner2:
+
+Q&A:                      8/10
+Presentation:              6/6
+
+Deductions:
+Notes:
+
+	Couldn't identify mistake in MsgFromServer
+	Was unable to find the issue with the function using (possible-user)
+
+
+Partner 2 Codewalk Total: 14/16
+
+Overall Score for Partner 1: 43/50
+Overall Score for Partner 2: 43/50
+
+Other Notes:

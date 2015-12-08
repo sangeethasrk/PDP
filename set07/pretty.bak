@@ -1,0 +1,367 @@
+;; The first three lines of this file were inserted by DrRacket. They record metadata
+;; about the language level of this file in a form that our tools can easily process.
+#reader(lib "htdp-intermediate-lambda-reader.ss" "lang")((modname |pretty (1)|) (read-case-sensitive #t) (teachpacks ((lib "image.rkt" "teachpack" "2htdp"))) (htdp-settings #(#t constructor repeating-decimal #f #t none #f ((lib "image.rkt" "teachpack" "2htdp")))))
+(require "extras.rkt")
+(require rackunit)
+(require racket/list)
+(define TIME-ON-TASK 24)
+
+; An Expr is one of:
+; - Integer
+;  - (make-add (cons Expr NEListOf<Expr>) Boolean)
+;  - (make-mul (cons Expr NEListOf<Expr>) Boolean)
+; Represents a numeric expression that is either an integer, or an addition
+; or multiplication of two or more expressions.
+; The Boolean flag indicates whether expression uses infix or prefix notation.
+(define-struct add (exprs infix?))
+(define-struct mul (exprs infix?))
+
+; TEMPLATE
+; expr-fn: Expr -> ???
+; (define (expr-fn expr)
+;   (cond
+;     [(integer? expr) ...]
+;     [(add? expr) (...(nelist-expr-fn (add-exprs expr))
+;                   ... (add-infix? expr)...)]
+;     [else (...(nelist-expr-fn (mul-exprs expr))
+;                   ... (mul-infix? expr)...)]
+
+; nelist-expr-fn: NEListOf<Expr> -> ???
+;(define (nelist-expr-fn neloe)
+;   (cond
+;     [(empty? (rest loe)) (...expr-fn (first neloe)...)]
+;     [else (... (expr-fn (first loe)) ...
+;                (...nelist-expr-fn (rest loe)) ...)]))
+
+; DATA EXAMPLES:
+(define EXAMPLE-ADD-INFIX
+  (make-add (list 1 2) true))   
+(define EXAMPLE-MUL-INFIX
+  (make-mul (list 1 2) true)) 
+(define EXAMPLE-COMPLX-INFIX
+  (make-add (list (make-mul (list 1 2) true) 
+                  (make-add (list 1 2) true)) true))
+(define EXAMPLE-ADD-PREFIX
+  (make-add (list 1 2) false))   
+(define EXAMPLE-MUL-PREFIX
+  (make-mul (list 1 2) false)) 
+(define EXAMPLE-COMPLX-PREFIX
+  (make-add (list (make-mul (list 1 2) false) 
+                  (make-add (list 1 2) false)) false))
+(define EXAMPLE-COMPLX
+  (make-mul (list (make-mul (list 2 3) true) 
+                  (make-add (list 1 2) false)) false))
+
+; Expression Constants:
+(define OPEN "(")
+(define CLOSE ")")
+(define SPACE " ")
+
+; op? : String -> Boolean
+; A predicate to determine whether a string character is an operator or not
+; EXAMPLES : 
+(begin-for-test
+  (check-equal? (op? "+")
+                #true
+                "Function failed")  
+  (check-equal? (op? "*")
+                #true
+                "Function failed")
+  (check-equal? (op? "a")
+                #false
+                "Function failed"))
+; STRATEGY : Function Composition
+(define (op? op)
+  (or (string=? op "+")
+      (string=? op "*")))
+
+; space? : String -> Boolean
+; A predicate to determine whether a string character is an empty space or not
+; EXAMPLES : 
+(begin-for-test
+  (check-equal? (space? " ")
+                #true
+                "Function failed")
+  (check-equal? (space? "a")
+                #false
+                "Function failed"))
+; STRATEGY : Function Composition
+(define (space? sp)
+  (string=? sp SPACE))
+
+; expr->strings : Expr Natural -> ListOf<String>
+; Returns a rendering of exp as a sequence of lines,
+; where each line is a string not longer than width characters.
+; EFFECT: errors if expr cannot fit width
+; STRATEGY: Function Composition
+(define (expr->strings expr width)
+  (cond
+    [(integer? expr) (if (>= width (string-length (number->string expr)))
+                         (list (number->string expr))
+                         (error "doesn't fit"))]
+    
+    [(add? expr) (if (has-sub-exprs? (add-exprs expr))
+                     (render-expr (add-exprs expr) (add-infix? expr) width "+")
+                     (line-print (add-exprs expr) (add-infix? expr) width "+"))]
+    
+    [else (if (has-sub-exprs? (mul-exprs expr))
+              (render-expr (mul-exprs expr) (mul-infix? expr) width "*")
+              (line-print (mul-exprs expr) (mul-infix? expr) width "*"))]))
+
+; has-sub-exprs? : NEListOf<Expr> -> Boolean
+; Checks whether the input contains sub-expressions
+; EXAMPLES:
+(begin-for-test
+  (check-equal? (has-sub-exprs? (list 1 2))
+                #false
+                "Function failed")
+  (check-equal? (has-sub-exprs? (list EXAMPLE-COMPLX))
+                #true
+                "Function failed"))
+; STRATEGY: Data Decomposition on neloe : NEListOf<Expr>
+(define (has-sub-exprs? neloe)
+  (struct? (first neloe)))
+
+; render-expr : NEListOf<Expr> Boolean Natural String -> ListOf<String>
+; Renders the list string equivalent of the expression list passed
+; STRATEGY: Function Composition
+(define (render-expr neloe infix? width op)
+  (cond
+    [infix? (add-at-first OPEN (render-expr-infix neloe (sub1 width) op))]
+    [else (render-expr-prefix neloe (- width 3) op)]))
+
+; render-expr-infix : NEListOf<Expr> Natural String -> ListOf<String>
+; Renders the infix string equivalent of the expression list passed
+; STRATEGY: Data Decomposition on ListOf<String>
+(define (render-expr-infix neloe width op)
+  (cons
+   (first (render-infix neloe width op))
+   (map
+    (λ(l) (string-append SPACE l))
+    (rest (render-infix neloe width op)))))
+
+; render-infix : NEListOf<Expr> Natural String -> ListOf<String>
+; Renders the infix string equivalent of the expression list passed
+; STRATEGY: Data Decomposition on neloe : NEListOf<Expr>
+(define (render-infix neloe width op)
+  (cond
+    [(empty? (rest neloe))
+     (add-at-last CLOSE (expr->strings (first neloe) width))]
+    [else
+     (append
+      (expr->strings (first neloe) width)
+      (list op)
+      (render-infix (rest neloe) width op))]))
+
+; render-expr-prefix : NEListOf<Expr> Natural String -> String
+; Renders the prefix string equivalent of the expression list passed
+; STRATEGY: Function Composition
+(define (render-expr-prefix loe width op)
+  (string-append
+   "(" op SPACE
+   (map (λ(l) (string-append SPACE SPACE SPACE l))
+        (render-prefix loe width op))))
+
+; add-at-last : Any ListOf<String> -> ListOf<String>
+; Adds the converted expression strings as List items by 
+; appending to end of ListOf<String>
+; STRATEGY: Data Decomposition on lst : ListOf<String>
+(define (add-at-last item lst)
+  (append
+   (take lst (sub1 (length lst)))
+   (list (string-append (last lst) item))))
+
+; add-at-first : Any ListOf<String> -> ListOf<String>
+; Adds the converted expression strings as List items by 
+; appending to the bginning of ListOf<String>
+; STRATEGY: Data Decomposition on lst : ListOf<String>
+(define (add-at-first item lst)
+  (append
+   (list (string-append item (first lst)))
+   (rest lst)))
+
+; render-struct : ListOf<Integers> Boolean Natural String -> String
+; Renders the string equivalent of the expression list passed
+; STRATEGY: Function Composition
+(define (render-struct loint infix? width op)
+  (if infix?
+      (string-append
+       OPEN
+       (render-struct-infix loint width op))
+      (render-struct-prefix loint width op)))      
+
+; render-struct-prefix : NEListOf<Integers> Natural String -> String
+; Renders the prefix string equivalent of the integer list passed
+; STRATEGY: Data Decomposition on loint : NEListOf<Integers>
+(define (render-struct-prefix loint width op)
+  (string-append
+   OPEN
+   op
+   (foldr append-with-space "" loint)
+   CLOSE))
+
+; render-struct-infix : NEListOf<Integers> Natural String -> String
+; Renders the infix string equivalent of the integer list passed
+; STRATEGY: Data Decomposition on loint : NEListOf<Integers>
+(define (render-struct-infix loint width op)
+  (cond
+    [(empty? (rest loint)) (string-append (number->string (first loint)) ")")]
+    [else
+     (string-append
+      (number->string (first loint))
+      SPACE op SPACE
+      (render-struct-infix (rest loint) width op))]))
+
+; line-print : NEListOf<Integers> Boolean Natural String -> ListOf<String>
+; Renders the string equivalent of the expression as lines
+; STRATEGY : Function Composition
+(define (line-print neloint infix? width op )
+  (local
+    (
+     (define subexpr (render-struct neloint infix? width op)))
+    (cond
+      [(<= (string-length subexpr) width) (list subexpr)]
+      [else
+       (if infix?
+           (multi-line-print-infix (explode subexpr) width op)
+           (multi-line-print-prefix (explode subexpr) width op))])))
+
+; multi-line-print-infix : ListOf<String> Natural String -> ListOf<String>
+; Renders the stacked representation of expressions as strings
+; STRATEGY : Data Decomposition on lst : ListOf<String>
+(define (multi-line-print-infix lst width op)
+  (local
+    (; multi-line-print-infix/a : ListOf<String> Natural Lons -> ListOf<String>
+     ; Renders the multi line infix representation of expressions as strings
+     ; WHERE : expr-so-far is the processed part of the expression 
+     (define (multi-line-print-infix/a lst w expr-so-far)
+       (cond
+         [(empty? lst) (if (> w 0)
+                           (list (implode expr-so-far))
+                           (error "doesn't fit"))]
+         [(space? (first lst))
+          (if (> w 0)
+              (cons
+               (implode expr-so-far)
+               (multi-line-print-infix/a (rest lst) (sub1 (length expr-so-far))
+                                         expr-so-far))
+              (error "doesn't fit"))]
+         
+         [(op? (first lst))
+          (if (> w 0)
+              (cons
+               (string-append SPACE (first lst))
+               (multi-line-print-infix/a (rest (rest lst)) (sub1 width)
+                                         (list SPACE)))
+              (error "doesn't fit"))]
+         
+         [else
+          (if (> w 0)
+              (multi-line-print-infix/a (rest lst) (sub1 w)
+                                        (add-at-front (first lst) expr-so-far))
+              (error "doesn't fit"))])))
+    (multi-line-print-infix/a lst width empty)))
+
+; multi-line-print-prefix: NEListOf<1String> Natural String
+; Returns expr as a list of strings indented and aligned by line widths
+; EXAMPLES: 
+(begin-for-test
+  (check-equal? (multi-line-print-prefix
+                 (list "(" "+" " " "1" " " "2" " " "3" ")") 10 "+")
+                (list "(+ 1" "   2" "   3)") "prefix"))
+; STRATEGY: Function Composition
+(define (multi-line-print-prefix lst width op)
+  (local
+    (;accumulator
+     (define (multi-line-print-prefix/a lst w expr-so-far)
+       (cond
+         [(empty? lst) (if (> w 0)
+                           (list (implode expr-so-far))
+                           (error "doesn't fit"))]
+         [(and (space? (first lst)) (op? (last expr-so-far)))
+          (if (> w 0)
+              (multi-line-print-prefix/a
+                (rest lst) (sub1 w) (add-at-front (first lst) expr-so-far))
+              (error "doesn't fit"))]
+         
+         [(and (space? (first lst)) (num? (last expr-so-far)))
+             (cons
+              (implode expr-so-far)
+              (multi-line-print-prefix/a (rest lst) (- width 3)
+                                         (list SPACE SPACE SPACE)))]
+         
+         [else
+          (if (> w 0)
+              (multi-line-print-prefix/a (rest lst) (sub1 w)
+                                        (add-at-front (first lst) expr-so-far))
+              (error "doesn't fit"))])))
+    (multi-line-print-prefix/a lst width empty)))
+; Test-suite: 
+(begin-for-test
+  (check-error (multi-line-print-prefix
+                 (list "(" "+" " " "1" " " "2" " " "3" ")") 1 "+")
+                "doesn't fit"))
+  
+; num?: 1String -> boolean
+; true if theitem is an integer
+; EXAMPLES:
+(begin-for-test
+  (check-equal? (num? "4")
+                 true
+                "true"))
+(define (num? item)
+  (integer? (string->number item)))
+; Test-suite:
+(begin-for-test
+  (check-equal? (num? "d")
+                 false
+                "false"))
+
+; add-at-front: 1String ListOf<1String> -> ListOf<1String>
+; true if theitem is an integer
+; EXAMPLES:
+(begin-for-test
+  (check-equal? (num? "4")
+                 true
+                "true"))
+(define (add-at-front item lst)
+  (append
+   lst
+   (list item)))
+
+; Integer Integer -> String 
+; concatenates two integers as strings and prefixes with space 
+(define (append-with-space s1 s2)
+  (local
+    (
+     (define STR1 (if (integer? s1) (number->string s1) s1))
+     (define STR2 (if (integer? s2) (number->string s2) s2)))
+    (string-append " " STR1 STR2)))
+
+; TEST SUITE
+(begin-for-test
+  (check-equal? (expr->strings EXAMPLE-ADD-PREFIX 10)
+                (list "(+ 1 2)")
+                "Function failed")  
+  (check-equal? (expr->strings EXAMPLE-MUL-PREFIX 10)
+                (list "(* 1 2)")
+                "Function failed")
+  (check-equal? (expr->strings EXAMPLE-COMPLX-PREFIX 10)
+                (list "(+ (* 1 2) (+ 1 2))")
+                "Function failed")
+  (check-equal? (expr->strings EXAMPLE-ADD-INFIX 10)
+                (list "(1 + 2)")
+                "Function failed")  
+  (check-equal? (expr->strings EXAMPLE-MUL-INFIX 10)
+                (list "(1 * 2)")
+                "Function failed")
+  (check-equal? (expr->strings EXAMPLE-COMPLX-INFIX 7)
+                (list "((1 * 2)"
+                      " + (1 + 2))")
+                "Function failed")
+  (check-equal? (expr->strings 1 4)
+                (list "1")
+                "Function failed")
+  (check-equal? (expr->strings EXAMPLE-COMPLX 30)
+                (list "(* (2 * 3) (+ 1 2))")
+                "Function failed"))
