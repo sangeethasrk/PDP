@@ -1,0 +1,90 @@
+Partner1 Name: Sangeetha Sivaramakrishnan
+Partner1 CCS ID: geethsrk
+
+Partner2 Name: Siva Rama Krishna Gudivaka
+Partner2 CCS ID: sivaram
+
+
+Grade Report
+
+Design Grading:
+
+Correctness:            7/10
+Data Design:            3/5
+Function Specification: 4/5
+Implementation:         3/5
+Style:                  5/5
+
+Deductions:
+
+Design Total:          22/30
+
+Notes:
+
+Data Design
+* itemization templates must have as many clauses as the data defn
+* why does is-attribute-list? call (list? ...) when we know that the signature
+  says it can only receive a list?
+
+Function Specification
+* depth-further and extract-further need better purpose statements and names
+
+Implementation
+* attribute-value doesn't follow template -- why not? having to diverge from the
+  template is a sign to rethink your design, task decomposition, etc.
+* same for xexpr-depth, extract-further, depth-further
+* nice use of map + filter in xexpr-find
+
+Style
+* don't put parens on separate lines (e.g. list-of-attributes?, crawl-data)
+
+
+
+Codewalk Grading:
+
+Partner1: Sangeetha
+
+Q&A:                      6/10
+Data Design Alternatives:  5/5
+Presentation:              4/5
+
+Deductions:
+Notes:
+
+Q&A
+* good attempts at explaining template
+* need to review list template
+* need to work on distinguishing different cases of a data defn
+
+Presentation
+* don't interrupt partner when speaking
+
+Partner 1 Codewalk Total  15/20
+
+
+Partner2: Siva
+
+Q&A:                      6/10
+Data Design Alternatives:  5/5
+Presentation:              4/5
+
+Deductions:
+Notes:
+
+Q&A
+* good attempts at explaining template
+* need to review why we have separate clauses in an itemization template
+* need to work on distinguishing different cases of a data defn
+
+Presentation
+* don't read off code when answering a q
+* don't interrupt partner when speaking
+
+Partner 2 Codewalk Total: 15/20
+
+
+
+Overall Score for Partner 1: 37/50
+Overall Score for Partner 2: 37/50
+
+Other Notes:

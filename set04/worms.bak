@@ -600,24 +600,8 @@
 ; There will be a lot of extraneous non comprehendible code as a result of 
 ; this structure.
 
-; B) USING 1 and 0 as values for DIRECTION
+; B) Worm sttructure can be as follows
+; (define-struct worm [listOfPositions Direction length]
+; The length here indicating the count of the number of ssegments in the worm.
 
-; A Direction can just be one of:
-; - 1
-; - 0
-; INTERP: 1 represents right and down directions and 0 represents left and 
-; top directions of the ball 
-; (define LEFT 0)
-; (define RIGHT 1)
-; (define TOP 0)
-; (define DOWN 1)
-
-; PROS: Every time the ball hits the wall or boundary on the left 1 has to  
-; be added to its direction component of the ball structure to change its  
-; direction to represent right and similarly when it hits the right boundary, 
-; 1 is subtracted from its direction component. The ease of calculations and not
-; necessitating a separate direction function to change the directions could be 
-; reasons to use this data definition.
-
-; CONS: The directions of TOP and LEFT hold same values. 
-; This could lead to errors in the code.
+                

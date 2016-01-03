@@ -1,0 +1,235 @@
+PDP Test Report for SET06
+
+
+Test Name: xexpr-tests
+Definitions:
+	(define HREF 'href)
+	(define SRC 'src)
+	(define NEU-LINK "http://northeastern.edu")
+	(define BALL-IMAGE "ball.gif")
+	(define HREF-NEU (list HREF NEU-LINK))
+	(define SRC-BALL (list SRC BALL-IMAGE))
+	(define HTML-EMPTY '(html ((lang "en-US")) (body (p) (br) (p) (br))))
+	(define HTML-WITH-TEXT
+	  '(html
+	    ((lang "en-US"))
+	    (body
+	     (p "Here is assignment " 5)
+	     (br)
+	     (p "This is a " (b "data") " definition."))))
+	(define HTML-WITH-TEXT-CONTENT
+	  '((body
+	     (p "Here is assignment " 5)
+	     (br)
+	     (p "This is a " (b "data") " definition."))))
+	(define HTML-ATTRIBUTES '((lang "en-US")))
+	(define IMG '(img ((src "balls.png") (width "100") (height "50"))))
+	(define IMG-ATTRIBUTES '((src "balls.png") (width "100") (height "50")))
+	(define NESTED-XEXPR-NESTED-TAG-ELEMENTS
+	  (cons 'html (cons (list (list 'lang "xyz")) empty)))
+	(define NESTED-XEXPR
+	  (cons
+	   'html
+	   (cons (list (list 'lang "abc")) (list NESTED-XEXPR-NESTED-TAG-ELEMENTS))))
+	(define INVALID-XML '(html 9 "This is not valid" ((lang "en-US"))))
+	(define XEXPR-BODY '(body (p) (br) (p) (br)))
+	(define XEXPR-NO-ATTRIBUTES `(html ,XEXPR-BODY))
+	(define XEXPR-NO-ATTRIBUTES-CONTENT `(,XEXPR-BODY))
+	(define XEXPR-SYMBOL 'body)
+	(define BAD-TAG '("bad tag"))
+	(define BAD-ATTRS '(tag ("not" "a" "list" "of" "attributes") "xexpr"))
+	(define BAD-ATTR '(tag ((attr-name "attr-val" "bad")) 1 2 3 4))
+	(define BAD-SUB-XEXPR '(tag ((name "Dan")) ("not" "an" "xexpr")))
+	(define DEEPLY-NESTED
+	  '(zero
+	    ()
+	    (a-sub-element)
+	    (one (two (three (four (five (six (seven (eight (nine (ten))))))))))
+	    (another (nested (sub (element))))
+	    (and (yet (another (nested (element)))))))
+	(define FIND-NAME
+	  '(a
+	    ((name "1") (name "2"))
+	    (b () (c ((name "3"))))
+	    (d () (e () (f ((foo "foo") (name "4") (bar "bar") (name "5")))))
+	    (g)
+	    (h () (i) (j ((name "6"))))))
+
+Test Case: 
+  (test-pred "valid" xexpr-element? HTML-EMPTY)
+Test Result: Success
+
+Test Case: 
+  (test-pred "valid" xexpr-element? HTML-WITH-TEXT)
+Test Result: Success
+
+Test Case: 
+  (test-pred "valid" xexpr-element? IMG)
+Test Result: Success
+
+Test Case: 
+  (test-pred "large, valid xexpr" xexpr-element? LARGE-XEXPR)
+Test Result: Success
+
+Test Case: 
+  (test-pred "xexpr with many nested name attrs" xexpr-element? FIND-NAME)
+Test Result: Success
+
+Test Case: 
+  (test-pred "invalid" not-xexpr? INVALID-XML)
+Test Result: Failure
+expression : (check-pred not-xexpr? INVALID-XML)
+params : (#<procedure:not-xexpr?> (html 9 This is not valid ((lang en-US))))
+
+Test Case: 
+  (test-pred "tag must be symbol" not-xexpr? BAD-TAG)
+Test Result: Failure
+expression : (check-pred not-xexpr? BAD-TAG)
+params : (#<procedure:not-xexpr?> (bad tag))
+
+Test Case: 
+  (test-pred "invalid attributes" not-xexpr? BAD-ATTRS)
+Test Result: Failure
+expression : (check-pred not-xexpr? BAD-ATTRS)
+params : (#<procedure:not-xexpr?> (tag (not a list of attributes) xexpr))
+
+Test Case: 
+  (test-pred "invalid attributes" not-xexpr? BAD-ATTR)
+Test Result: Failure
+expression : (check-pred not-xexpr? BAD-ATTR)
+params : (#<procedure:not-xexpr?> (tag ((attr-name attr-val bad)) 1 2 3 4))
+
+Test Case: 
+  (test-pred "invalid nested xexpr" not-xexpr? BAD-SUB-XEXPR)
+Test Result: Failure
+expression : (check-pred not-xexpr? BAD-SUB-XEXPR)
+params : (#<procedure:not-xexpr?> (tag ((name Dan)) (not an xexpr)))
+
+Test Case: 
+  (test-false "atom has no tag" (xexpr-tag XEXPR-SYMBOL))
+Test Result: Failure
+expression : (check-false (xexpr-tag XEXPR-SYMBOL))
+params : (body)
+
+Test Case: 
+  (test-equal? "html tag" (xexpr-tag HTML-WITH-TEXT) 'html)
+Test Result: Success
+
+Test Case: 
+  (test-check "img attributes" set=? (xexpr-attributes IMG) IMG-ATTRIBUTES)
+Test Result: Success
+
+Test Case: 
+  (test-equal? "attr lang=abc" (xexpr-attributes NESTED-XEXPR) '((lang "abc")))
+Test Result: Success
+
+Test Case: 
+  (test-pred "no attrs" empty? (xexpr-attributes XEXPR-NO-ATTRIBUTES))
+Test Result: Success
+
+Test Case: 
+  (test-equal?
+   "(length content) = 1"
+   (xexpr-content XEXPR-NO-ATTRIBUTES)
+   XEXPR-NO-ATTRIBUTES-CONTENT)
+Test Result: Success
+
+Test Case: 
+  (test-equal?
+   "atomic content"
+   (xexpr-content HTML-WITH-TEXT)
+   HTML-WITH-TEXT-CONTENT)
+Test Result: Success
+
+Test Case: 
+  (test-false "no src attr" (attribute-value (list HREF-NEU) SRC))
+Test Result: Success
+
+Test Case: 
+  (test-equal?
+   "src attr"
+   (attribute-value (list HREF-NEU SRC-BALL) SRC)
+   BALL-IMAGE)
+Test Result: Success
+
+Test Case: 
+  (test-false "no HREF attr" (get-value HTML-EMPTY HREF))
+Test Result: Success
+
+Test Case: 
+  (test-equal? "img=100" (get-value IMG 'width) "100")
+Test Result: Success
+
+Test Case: 
+  (test-pred "no HREF attr" empty? (xexpr-find NESTED-XEXPR HREF))
+Test Result: Success
+
+Test Case: 
+  (test-check
+   "2 lang attrs"
+   set=?
+   (xexpr-find NESTED-XEXPR 'lang)
+   (list "abc" "xyz"))
+Test Result: Success
+
+Test Case: 
+  (test-check
+   "6 name attrs"
+   set=?
+   (xexpr-find FIND-NAME 'name)
+   (list "1" "2" "3" "4" "5" "6"))
+Test Result: Success
+
+Test Case: 
+  (test-equal? "IMG has depth 0" (xexpr-depth IMG) 0)
+Test Result: Success
+
+Test Case: 
+  (test-equal? "HTML-WITH-TEXT has depth 4" (xexpr-depth HTML-WITH-TEXT) 4)
+Test Result: Success
+
+Test Case: 
+  (test-equal? "large x-expr has depth of 3" (xexpr-depth LARGE-XEXPR) 3)
+Test Result: Error
+first: contract violation
+  expected: (and/c list? (not/c empty?))
+  given: "wApeRNGyEsQvcoCac"
+
+Test Case: 
+  (test-equal? "deep xexpr has depth 10" (xexpr-depth DEEPLY-NESTED) 10)
+Test Result: Failure
+actual : 2
+expected : 10
+expression : (check-equal? (xexpr-depth DEEPLY-NESTED) 10)
+params : (2 10)
+
+Test Case: 
+  (test-check
+   "2 xexpr with tag html"
+   set=?
+   (xexpr-elements NESTED-XEXPR 'html)
+   (list NESTED-XEXPR NESTED-XEXPR-NESTED-TAG-ELEMENTS))
+Test Result: Success
+
+Test Case: 
+  (test-pred "no href elements" empty? (xexpr-elements HTML-WITH-TEXT HREF))
+Test Result: Success
+
+
+Results for Suite xexpr-tests:
+  Test Successes: 22
+  Test Failures: 7
+  Test Errors: 1
+
+Raw Score: 22/30
+Normalized Score: 7/10
+
+
+Overall Results:
+  Test Successes: 22
+  Test Failures: 7
+  Test Errors: 1
+
+Raw Score: 22/30
+Normalized Score: 7/10
+

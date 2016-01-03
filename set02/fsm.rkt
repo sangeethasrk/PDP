@@ -195,3 +195,5 @@
   (cond
     [(string=? w ER) #true]
     [else #false]))
+
+(run INITIAL-WORLD)
