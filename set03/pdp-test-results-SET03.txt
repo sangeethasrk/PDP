@@ -1,0 +1,313 @@
+PDP Test Report for SET03
+
+
+Test Name: bounce-tests
+Definitions:
+	(define CENTER-X 150)
+	(define CENTER-Y 200)
+	(define WIDTH (* CENTER-X 2))
+	(define HEIGHT (* CENTER-Y 2))
+	(define TOP-Y 0)
+	(define G 1)
+	(define BOUNCE-COEFF 0.9)
+	(define BALL-RADIUS 20)
+	(define BALL-START-X CENTER-X)
+	(define BALL-START-Y (+ TOP-Y BALL-RADIUS))
+	(define BALL-GROUND-Y (- HEIGHT BALL-RADIUS))
+	(define BALL-Y-VEL-START 0)
+	(define BALL-X-VEL 3)
+	(define BALL-X-RIGHT-EDGE (- WIDTH BALL-RADIUS))
+	(define BALL-X-LEFT-EDGE BALL-RADIUS)
+	(define (round-up x) (add1 (truncate x)))
+	(define (discriminant a b c) (- (* b b) (* 4 a c)))
+	(define (solve-quad+ a b c) (/ (+ (- b) (sqrt (discriminant a b c))) (* 2 a)))
+	(define DIST-TO-GROUND (- BALL-GROUND-Y BALL-START-Y))
+	(define TICKS-TO-1ST-GROUND
+	  (round-up (solve-quad+ 0.5 BALL-Y-VEL-START (- DIST-TO-GROUND))))
+	(define TICKS-FROM-GROUND-TO-2ND-TOP-Y (truncate (* 0.9 TICKS-TO-1ST-GROUND)))
+	(define TICKS-TO-2ND-TOP-Y
+	  (+ TICKS-TO-1ST-GROUND TICKS-FROM-GROUND-TO-2ND-TOP-Y))
+	(define EXACT-TIME-TO-1ST-GROUND
+	  (solve-quad+ 0.5 BALL-Y-VEL-START (- DIST-TO-GROUND)))
+	(define TICKS-FROM-TOP-TO-2ND-GROUND (add1 TICKS-FROM-GROUND-TO-2ND-TOP-Y))
+	(define TICKS-TO-2ND-GROUND
+	  (+ TICKS-TO-2ND-TOP-Y TICKS-FROM-TOP-TO-2ND-GROUND))
+	(define TICKS-TO-RIGHT-WALL (round-up (/ (- CENTER-X BALL-RADIUS) BALL-X-VEL)))
+	(define TICKS-TO-GO-ACROSS-CANVAS
+	  (round-up (/ (- WIDTH (* 2 BALL-RADIUS)) BALL-X-VEL)))
+	(define TICKS-TO-LEFT-WALL (+ TICKS-TO-RIGHT-WALL TICKS-TO-GO-ACROSS-CANVAS))
+	(define ε 0.001)
+	(define (new-y curr-y curr-vel a t) (+ curr-y (* curr-vel t) (* 0.5 a t t)))
+	(define (world-ball-y w) (ball-y (world-ball w)))
+	(define (world-ball-x w) (ball-x (world-ball w)))
+	(define (pause w) (key-handler w "p"))
+	(define (next-world-n n w)
+	  (if (zero? n) w (next-world-n (sub1 n) (next-world w))))
+
+Test Case: 
+  (test-= "one tick" (world-ball-y (next-world INITIAL-WORLD)) 20.5 ε)
+Test Result: Failure
+expression : (check-= (world-ball-y (next-world INITIAL-WORLD)) 20.5 ε)
+params : (108/5 20.5 0.001)
+
+Test Case: 
+  (test-=
+   "ball right before ground (1st time)"
+   (world-ball-y (next-world-n (sub1 TICKS-TO-1ST-GROUND) INITIAL-WORLD))
+   (new-y BALL-START-Y BALL-Y-VEL-START G (sub1 TICKS-TO-1ST-GROUND))
+   ε)
+Test Result: Failure
+expression : (check-= (world-ball-y (next-world-n (sub1 TICKS-TO-1ST-GROUND) INITIAL-WORLD)) (new-y BALL-START-Y BALL-Y-VEL-START G (sub1 TICKS-TO-1ST-GROUND)) ε)
+params : (380 358.0 0.001)
+
+Test Case: 
+  (test-=
+   "ball on ground (1st time)"
+   (world-ball-y (next-world-n TICKS-TO-1ST-GROUND INITIAL-WORLD))
+   BALL-GROUND-Y
+   ε)
+Test Result: Failure
+expression : (check-= (world-ball-y (next-world-n TICKS-TO-1ST-GROUND INITIAL-WORLD)) BALL-GROUND-Y ε)
+params : (35791/100 380 0.001)
+
+Test Case: 
+  (test-=
+   "ball at top of arc (2nd time)"
+   (world-ball-y (next-world-n TICKS-TO-2ND-TOP-Y INITIAL-WORLD))
+   expected-2nd-top-y
+   (* ε expected-2nd-top-y))
+Test Result: Failure
+expression : (check-= (world-ball-y (next-world-n TICKS-TO-2ND-TOP-Y INITIAL-WORLD)) expected-2nd-top-y (* ε expected-2nd-top-y))
+params : (511/4 88.41118023205445 0.08841118023205445)
+
+Test Case: 
+  (test-=
+   "ball at ground (2nd time)"
+   (world-ball-y (next-world-n TICKS-TO-2ND-GROUND INITIAL-WORLD))
+   BALL-GROUND-Y
+   ε)
+Test Result: Failure
+expression : (check-= (world-ball-y (next-world-n TICKS-TO-2ND-GROUND INITIAL-WORLD)) BALL-GROUND-Y ε)
+params : (76831/250 380 0.001)
+
+Test Case: 
+  (test-=
+   "ball at right wall"
+   (world-ball-x (next-world-n TICKS-TO-RIGHT-WALL INITIAL-WORLD))
+   BALL-X-RIGHT-EDGE
+   ε)
+Test Result: Success
+
+Test Case: 
+  (test-=
+   "ball at left wall"
+   (world-ball-x (next-world-n TICKS-TO-LEFT-WALL INITIAL-WORLD))
+   BALL-X-LEFT-EDGE
+   ε)
+Test Result: Success
+
+Test Case: 
+  (test-=
+   "ball at right wall (2nd time)"
+   (world-ball-x
+    (next-world-n
+     (+ TICKS-TO-RIGHT-WALL (* 2 TICKS-TO-GO-ACROSS-CANVAS))
+     INITIAL-WORLD))
+   BALL-X-RIGHT-EDGE
+   ε)
+Test Result: Success
+
+Test Case: 
+  (test-true
+   "explosion just started"
+   (zero?
+    (ticks-since-click
+     (mouse-handler INITIAL-WORLD BALL-START-X BALL-START-Y "button-down"))))
+Test Result: Error
+pdp-require: mouse-handler not provided
+
+Test Case: 
+  (test-true
+   "missed click, no explosion"
+   (zero?
+    (ticks-since-click
+     (mouse-handler
+      INITIAL-WORLD
+      (sub1 (+ BALL-START-X BALL-RADIUS))
+      (sub1 (+ BALL-START-Y BALL-RADIUS))
+      "button-down"))))
+Test Result: Error
+pdp-require: mouse-handler not provided
+
+Test Case: 
+  (test-equal?
+   "8 ticks after 2nd explosion; 1st explosion cut off"
+   (ticks-since-click
+    (next-world-n
+     8
+     (mouse-handler
+      (next-world-n
+       1
+       (mouse-handler INITIAL-WORLD BALL-START-X BALL-START-Y "button-down"))
+      (+ BALL-START-X BALL-X-VEL)
+      (- BALL-START-Y (* 0.5 G))
+      "button-down")))
+   8)
+Test Result: Error
+pdp-require: mouse-handler not provided
+
+Test Case: 
+  (test-true
+   "10 ticks after explosion: explosion ended"
+   (zero?
+    (ticks-since-click
+     (next-world-n
+      10
+      (mouse-handler INITIAL-WORLD BALL-START-X BALL-START-Y "button-down")))))
+Test Result: Error
+pdp-require: mouse-handler not provided
+
+Test Case: 
+  (test-=
+   "downward vel + explosion"
+   (world-ball-y
+    (next-world
+     (mouse-handler
+      (next-world INITIAL-WORLD)
+      BALL-START-X
+      BALL-START-Y
+      "button-down")))
+   11
+   ε)
+Test Result: Error
+pdp-require: mouse-handler not provided
+
+Test Case: 
+  (test-=
+   "upward vel + explosion"
+   (world-ball-y
+    (next-world
+     (mouse-handler
+      (mouse-handler
+       (next-world INITIAL-WORLD)
+       BALL-START-X
+       BALL-START-Y
+       "button-down")
+      BALL-START-X
+      BALL-START-Y
+      "button-down")))
+   1
+   ε)
+Test Result: Error
+pdp-require: mouse-handler not provided
+
+Test Case: 
+  (test-equal?
+   "paused ball should not move"
+   (world-ball-y (next-world-n 11 (key-handler INITIAL-WORLD "p")))
+   BALL-START-Y)
+Test Result: Failure
+actual : Error: Failed to define `(world-ball-y w)`
+expected : 20
+expression : (check-equal? (world-ball-y (next-world-n 11 (key-handler INITIAL-WORLD p))) BALL-START-Y)
+params : (Error: Failed to define `(world-ball-y w)` 20)
+
+Test Case: 
+  (test-true
+   "pause should ignore clicks"
+   (zero?
+    (ticks-since-click
+     (next-world-n
+      5
+      (mouse-handler
+       (pause INITIAL-WORLD)
+       BALL-START-X
+       BALL-START-Y
+       "button-down")))))
+Test Result: Error
+pdp-require: mouse-handler not provided
+
+Test Case: 
+  (test-=
+   "pause should ignore clicks: velocity"
+   (world-ball-y
+    (next-world-n
+     5
+     (mouse-handler
+      (pause INITIAL-WORLD)
+      BALL-START-X
+      BALL-START-Y
+      "button-down")))
+   BALL-START-Y
+   ε)
+Test Result: Error
+pdp-require: mouse-handler not provided
+
+Test Case: 
+  (test-equal?
+   "explosion should pause"
+   (ticks-since-click
+    (next-world-n
+     5
+     (key-handler
+      (next-world
+       (mouse-handler INITIAL-WORLD BALL-START-X BALL-START-Y "button-down"))
+      "p")))
+   1)
+Test Result: Error
+pdp-require: mouse-handler not provided
+
+Test Case: 
+  (test-equal?
+   "testing score"
+   (score
+    (mouse-handler
+     (mouse-handler
+      (mouse-handler INITIAL-WORLD BALL-START-X BALL-START-Y "button-down")
+      BALL-START-X
+      BALL-START-Y
+      "button-down")
+     BALL-START-X
+     BALL-START-Y
+     "button-down"))
+   3)
+Test Result: Error
+pdp-require: mouse-handler not provided
+
+Test Case: 
+  (test-true
+   "ground resets score"
+   (zero?
+    (score
+     (next-world-n
+      (* 3 TICKS-TO-1ST-GROUND)
+      (mouse-handler
+       (mouse-handler
+        (mouse-handler INITIAL-WORLD BALL-START-X BALL-START-Y "button-down")
+        BALL-START-X
+        BALL-START-Y
+        "button-down")
+       BALL-START-X
+       BALL-START-Y
+       "button-down")))))
+Test Result: Error
+pdp-require: mouse-handler not provided
+
+
+Results for Suite bounce-tests:
+  Test Successes: 3
+  Test Failures: 6
+  Test Errors: 11
+
+Raw Score: 3/20
+Normalized Score: 2/10
+
+
+Overall Results:
+  Test Successes: 3
+  Test Failures: 6
+  Test Errors: 11
+
+Raw Score: 3/20
+Normalized Score: 2/10
+
